@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>War of Rights 队伍人数平衡器</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>WAR OF RIGHTS · 联队人数平衡器</h1>
+      <p class="subtitle">支持区间人数解析 · 双端上下限自动配平 · 一键导出战报</p>
+    </header>
+
+    <section class="control-panel">
+      <div class="input-group">
+        <div class="label-row">
+          <label for="rosterInput">批量输入报名兵团（每行一个，支持直接粘贴接龙）：</label>
+          <span class="hint">格式示例：<code>[FEX]15-20</code>、<code>[HD] 25~30 USA</code>、<code>散人 10</code></span>
+        </div>
+        <textarea id="rosterInput" rows="8" placeholder="在此粘贴兵团人数列表，例如：
+[FEX]15-20
+[HD]25-30
+[1stTX]12-16
+[69thNY]18-22
+[4thVA]10-14 CSA
+散人 8-12"></textarea>
+      </div>
+
+      <div class="toolbar">
+        <div class="mode-select">
+          <label for="balanceMode">优先配平策略：</label>
+          <select id="balanceMode">
+            <option value="balanced" selected>综合平衡（同时兼顾下限、上限与预期均值）</option>
+            <option value="min">保底优先（优先对齐最低出勤下限）</option>
+            <option value="max">峰值优先（优先对齐最高出勤上限）</option>
+          </select>
+        </div>
+
+        <div class="btn-group">
+          <button id="sampleBtn" class="btn btn-secondary" type="button">填入示例数据</button>
+          <button id="clearBtn" class="btn btn-secondary" type="button">清空</button>
+          <button id="balanceBtn" class="btn btn-primary" type="button">开始自动平衡</button>
+        </div>
+      </div>
+
+      <div id="parseWarning" class="warning-box hidden"></div>
+    </section>
+
+    <!-- 双方总览对比栏 -->
+    <section class="summary-bar" id="summaryBar">
+      <div class="summary-card usa-card">
+        <span class="faction-badge usa-badge">USA 联邦军</span>
+        <div class="stat-main" id="usaRange">0 - 0 人</div>
+        <div class="stat-sub" id="usaAvg">预期均值：0.0 人 | 兵团数：0</div>
+      </div>
+
+      <div class="summary-diff">
+        <div class="diff-title">双方人数差值</div>
+        <div class="diff-value" id="diffSummary">下限差 0 | 上限差 0</div>
+        <div class="diff-sub" id="avgDiffSummary">均值差：0.0 人</div>
+      </div>
+
+      <div class="summary-card csa-card">
+        <span class="faction-badge csa-badge">CSA 邦联军</span>
+        <div class="stat-main" id="csaRange">0 - 0 人</div>
+        <div class="stat-sub" id="csaAvg">预期均值：0.0 人 | 兵团数：0</div>
+      </div>
+    </section>
+
+    <!-- 左右分栏输出表格 -->
+    <section class="tables-grid">
+      <!-- USA 表格 -->
+      <div class="team-panel usa-panel">
+        <div class="panel-header usa-header">
+          <h2>USA · 联邦军 (Union)</h2>
+          <span id="usaCountTag" class="count-tag">0 支队伍</span>
+        </div>
+        <div class="table-wrapper">
+          <table id="usaTable">
+            <thead>
+              <tr>
+                <th>兵团番号</th>
+                <th>预期人数</th>
+                <th>均值</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="usaTbody">
+              <tr class="empty-row"><td colspan="5">暂无分配数据，请在上方输入后点击“开始自动平衡”</td></tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td><strong>合计</strong></td>
+                <td id="usaFootRange"><strong>0 - 0</strong></td>
+                <td id="usaFootAvg"><strong>0.0</strong></td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- CSA 表格 -->
+      <div class="team-panel csa-panel">
+        <div class="panel-header csa-header">
+          <h2>CSA · 邦联军 (Confederate)</h2>
+          <span id="csaCountTag" class="count-tag">0 支队伍</span>
+        </div>
+        <div class="table-wrapper">
+          <table id="csaTable">
+            <thead>
+              <tr>
+                <th>兵团番号</th>
+                <th>预期人数</th>
+                <th>均值</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="csaTbody">
+              <tr class="empty-row"><td colspan="5">暂无分配数据，请在上方输入后点击“开始自动平衡”</td></tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td><strong>合计</strong></td>
+                <td id="csaFootRange"><strong>0 - 0</strong></td>
+                <td id="csaFootAvg"><strong>0.0</strong></td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 导出区域 -->
+    <section class="export-section">
+      <button id="copyTextBtn" class="btn btn-gold" type="button">📋 一键复制群公告排表文本</button>
+      <span id="copyStatus" class="copy-status"></span>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
