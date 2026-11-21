@@ -10,24 +10,69 @@
   <div class="container">
     <header class="header">
       <h1>WAR OF RIGHTS · 联队人数平衡器</h1>
-      <p class="subtitle">支持区间人数解析 · 双端上下限自动配平 · 一键导出战报</p>
+      <p class="subtitle">表格可视化录入 · 批量文本解析 · 本地自动记忆 · 双端区间配平</p>
     </header>
 
     <section class="control-panel">
-      <div class="input-group">
-        <div class="label-row">
-          <label for="rosterInput">批量输入报名兵团（每行一个，支持直接粘贴接龙）：</label>
-          <span class="hint">格式示例：<code>[FEX]15-20</code>、<code>[HD] 25~30 USA</code>、<code>散人 10</code></span>
+      <!-- 顶部模式切换与记忆管理栏 -->
+      <div class="panel-top-bar">
+        <div class="tab-group">
+          <button id="tabTableBtn" class="tab-btn active" type="button">📊 表格录入模式</button>
+          <button id="tabTextBtn" class="tab-btn" type="button">📝 文本批量粘贴</button>
         </div>
-        <textarea id="rosterInput" rows="8" placeholder="在此粘贴兵团人数列表，例如：
+
+        <div class="memory-bar">
+          <span id="saveIndicator" class="save-indicator">● 已启用自动本地记忆</span>
+          <button id="savePresetBtn" class="btn btn-outline-sm" type="button" title="将当前表格存为常用常驻名单">💾 存为常用名单</button>
+          <button id="loadPresetBtn" class="btn btn-outline-sm" type="button" title="载入上次保存的常用名单">📂 载入常用名单</button>
+        </div>
+      </div>
+
+      <!-- 模式 A：表格输入区域 -->
+      <div id="tableInputView" class="input-view">
+        <div class="input-table-wrapper">
+          <table class="entry-table">
+            <thead>
+              <tr>
+                <th style="width: 34%;">兵团番号 / 队伍名称</th>
+                <th style="width: 18%;">最低人数 (下限)</th>
+                <th style="width: 18%;">最高人数 (上限)</th>
+                <th style="width: 20%;">阵营锁定</th>
+                <th style="width: 10%; text-align: center;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="entryTbody">
+              <!-- JS 动态渲染行 -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-actions-row">
+          <button id="addRowBtn" class="btn btn-secondary" type="button">+ 添加一行兵团</button>
+          <span class="hint">提示：修改表格数据会自动保存，点击下方“开始自动平衡”生成对阵表</span>
+        </div>
+      </div>
+
+      <!-- 模式 B：文本批量粘贴区域 -->
+      <div id="textInputView" class="input-view hidden">
+        <div class="label-row">
+          <label for="rosterInput">批量粘贴报名文本（每行一个，自动同步至表格）：</label>
+          <span class="hint">支持格式：<code>[FEX]15-20</code>、<code>[HD] 25~30 USA</code>、<code>散人 10</code></span>
+        </div>
+        <textarea id="rosterInput" rows="7" placeholder="在此粘贴兵团人数列表，例如：
 [FEX]15-20
 [HD]25-30
 [1stTX]12-16
 [69thNY]18-22
 [4thVA]10-14 CSA
 散人 8-12"></textarea>
+        <div class="table-actions-row">
+          <button id="parseToTableBtn" class="btn btn-secondary" type="button">📥 解析并同步到表格</button>
+          <span class="hint">解析后会自动切换回表格模式供你微调</span>
+        </div>
       </div>
 
+      <!-- 底部执行工具栏 -->
       <div class="toolbar">
         <div class="mode-select">
           <label for="balanceMode">优先配平策略：</label>
@@ -39,9 +84,9 @@
         </div>
 
         <div class="btn-group">
-          <button id="sampleBtn" class="btn btn-secondary" type="button">填入示例数据</button>
-          <button id="clearBtn" class="btn btn-secondary" type="button">清空</button>
-          <button id="balanceBtn" class="btn btn-primary" type="button">开始自动平衡</button>
+          <button id="sampleBtn" class="btn btn-secondary" type="button">填入示例</button>
+          <button id="clearBtn" class="btn btn-danger-outline" type="button">清空全部</button>
+          <button id="balanceBtn" class="btn btn-primary" type="button">⚔️ 开始自动平衡</button>
         </div>
       </div>
 
@@ -89,7 +134,7 @@
               </tr>
             </thead>
             <tbody id="usaTbody">
-              <tr class="empty-row"><td colspan="5">暂无分配数据，请在上方输入后点击“开始自动平衡”</td></tr>
+              <tr class="empty-row"><td colspan="5">暂无分配数据，请录入后点击“开始自动平衡”</td></tr>
             </tbody>
             <tfoot>
               <tr>
@@ -121,7 +166,7 @@
               </tr>
             </thead>
             <tbody id="csaTbody">
-              <tr class="empty-row"><td colspan="5">暂无分配数据，请在上方输入后点击“开始自动平衡”</td></tr>
+              <tr class="empty-row"><td colspan="5">暂无分配数据，请录入后点击“开始自动平衡”</td></tr>
             </tbody>
             <tfoot>
               <tr>
