@@ -362,9 +362,6 @@ function t(key, ...args) {
   return val !== undefined ? val : key;
 }
 
-// 本地存储 Key 定义
-const STORAGE_KEY_AUTO = "wor_balancer_autosave_v5";
-const STORAGE_KEY_PRESET = "wor_balancer_preset_v5";
 
 // 核心数据模型
 let entryRows = [];
