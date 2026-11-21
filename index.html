@@ -3,30 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>War of Rights 队伍人数平衡器</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>War of Rights Team Balancer · 联队人数平衡器</title>
+  <link rel="stylesheet" href="style.css?v=5" />
 </head>
 <body>
   <div class="container">
     <header class="header">
-      <h1>WAR OF RIGHTS · 联队人数平衡器</h1>
-      <p class="subtitle">表格录入 · 虚报/少报修正与公示 · 双端区间配平 · 一键生成排表长图</p>
+      <div class="lang-switcher">
+        <button type="button" class="lang-btn active" data-lang="zh">简体中文</button>
+        <button type="button" class="lang-btn" data-lang="en">English</button>
+        <button type="button" class="lang-btn" data-lang="ja">日本語</button>
+      </div>
+      <h1 data-i18n="title">WAR OF RIGHTS · 联队人数平衡器</h1>
+      <p class="subtitle" data-i18n="subtitle">表格录入 · 虚报/少报修正与公示 · 双端区间配平 · 一键生成排表长图</p>
     </header>
 
     <!-- 1. 主控制与兵团录入面板 -->
     <section class="control-panel">
       <div class="panel-top-bar">
         <div class="tab-group">
-          <button id="tabTableBtn" class="tab-btn active" type="button">📊 表格录入模式</button>
-          <button id="tabTextBtn" class="tab-btn" type="button">📝 文本批量粘贴</button>
+          <button id="tabTableBtn" class="tab-btn active" type="button" data-i18n="tabTable">📊 表格录入模式</button>
+          <button id="tabTextBtn" class="tab-btn" type="button" data-i18n="tabText">📝 文本批量粘贴</button>
         </div>
 
         <div class="memory-bar">
           <span id="saveIndicator" class="save-indicator">● 已启用自动本地记忆</span>
-          <button id="savePresetBtn" class="btn btn-outline-sm" type="button">💾 存为常用名单</button>
-          <button id="loadPresetBtn" class="btn btn-outline-sm" type="button">📂 载入常用名单</button>
-          <button id="exportJsonBtn" class="btn btn-outline-sm" type="button">⬇️ 导出 JSON 备份</button>
-          <button id="importJsonBtn" class="btn btn-outline-sm" type="button">⬆️ 导入 JSON</button>
+          <button id="savePresetBtn" class="btn btn-outline-sm" type="button" data-i18n="btnSavePreset">💾 存为常用名单</button>
+          <button id="loadPresetBtn" class="btn btn-outline-sm" type="button" data-i18n="btnLoadPreset">📂 载入常用名单</button>
+          <button id="exportJsonBtn" class="btn btn-outline-sm" type="button" data-i18n="btnExportJson">⬇️ 导出 JSON 备份</button>
+          <button id="importJsonBtn" class="btn btn-outline-sm" type="button" data-i18n="btnImportJson">⬆️ 导入 JSON</button>
           <input type="file" id="importJsonInput" accept=".json" class="hidden" />
         </div>
       </div>
@@ -37,12 +42,12 @@
           <table class="entry-table">
             <thead>
               <tr>
-                <th style="width: 28%;">兵团番号 / 队伍名称</th>
-                <th style="width: 14%;">申报下限</th>
-                <th style="width: 14%;">申报上限</th>
-                <th style="width: 20%;">修正后预估 (自动)</th>
-                <th style="width: 16%;">阵营锁定</th>
-                <th style="width: 8%; text-align: center;">操作</th>
+                <th style="width: 28%;" data-i18n="thRegiment">兵团番号 / 队伍名称</th>
+                <th style="width: 14%;" data-i18n="thMin">申报下限</th>
+                <th style="width: 14%;" data-i18n="thMax">申报上限</th>
+                <th style="width: 20%;" data-i18n="thAdjusted">修正后预估 (自动)</th>
+                <th style="width: 16%;" data-i18n="thLock">阵营锁定</th>
+                <th style="width: 8%; text-align: center;" data-i18n="thAction">操作</th>
               </tr>
             </thead>
             <tbody id="entryTbody"></tbody>
@@ -50,45 +55,43 @@
         </div>
 
         <div class="table-actions-row">
-          <button id="addRowBtn" class="btn btn-secondary" type="button">+ 添加一行兵团</button>
-          <span class="hint">提示：若下方“修正档案”中包含该团，系统会自动计算修正后预估人数并参与平衡</span>
+          <button id="addRowBtn" class="btn btn-secondary" type="button" data-i18n="btnAddRow">+ 添加一行兵团</button>
+          <span class="hint" data-i18n="hintTable">提示：若下方“修正档案”中包含该团，系统会自动计算修正后预估人数并参与平衡</span>
         </div>
       </div>
 
       <!-- 模式 B：文本批量粘贴区域 -->
       <div id="textInputView" class="input-view hidden">
         <div class="label-row">
-          <label for="rosterInput">批量粘贴报名文本（每行一个，自动同步至表格）：</label>
-          <span class="hint">支持格式：<code>[FEX]15-20</code>、<code>[HD] 25~30 USA</code>、<code>散人 10</code></span>
+          <label for="rosterInput" data-i18n="labelRosterInput">批量粘贴报名文本（每行一个，自动同步至表格）：</label>
+          <span class="hint" data-i18n-html="hintTextFormat">支持格式：<code>[FEX]15-20</code>、<code>[HD] 25~30 USA</code>、<code>散人 10</code></span>
         </div>
-        <textarea id="rosterInput" rows="7" placeholder="在此粘贴兵团人数列表，例如：
-[FEX]15-20
+        <textarea id="rosterInput" rows="7" placeholder="[FEX]15-20
 [HD]25-30
 [1stTX]12-16
 [69thNY]18-22
-[4thVA]10-14 CSA
-散人 8-12"></textarea>
+[4thVA]10-14 CSA"></textarea>
         <div class="table-actions-row">
-          <button id="parseToTableBtn" class="btn btn-secondary" type="button">📥 解析并同步到表格</button>
-          <span class="hint">解析后会自动切换回表格模式供你微调</span>
+          <button id="parseToTableBtn" class="btn btn-secondary" type="button" data-i18n="btnParseToTable">📥 解析并同步到表格</button>
+          <span class="hint" data-i18n="hintParseSync">解析后会自动切换回表格模式供你微调</span>
         </div>
       </div>
 
       <!-- 执行工具栏 -->
       <div class="toolbar">
         <div class="mode-select">
-          <label for="balanceMode">优先配平策略：</label>
+          <label for="balanceMode" data-i18n="labelMode">优先配平策略：</label>
           <select id="balanceMode">
-            <option value="balanced" selected>综合平衡（同时兼顾下限、上限与预期均值）</option>
-            <option value="min">保底优先（优先对齐最低出勤下限）</option>
-            <option value="max">峰值优先（优先对齐最高出勤上限）</option>
+            <option value="balanced" selected data-i18n="optBalanced">综合平衡（同时兼顾下限、上限与预期均值）</option>
+            <option value="min" data-i18n="optMin">保底优先（优先对齐最低出勤下限）</option>
+            <option value="max" data-i18n="optMax">峰值优先（优先对齐最高出勤上限）</option>
           </select>
         </div>
 
         <div class="btn-group">
-          <button id="sampleBtn" class="btn btn-secondary" type="button">填入示例(含修正)</button>
-          <button id="clearBtn" class="btn btn-danger-outline" type="button">清空报名表</button>
-          <button id="balanceBtn" class="btn btn-primary" type="button">⚔️ 开始自动平衡</button>
+          <button id="sampleBtn" class="btn btn-secondary" type="button" data-i18n="btnSample">填入示例(含修正)</button>
+          <button id="clearBtn" class="btn btn-danger-outline" type="button" data-i18n="btnClear">清空报名表</button>
+          <button id="balanceBtn" class="btn btn-primary" type="button" data-i18n="btnBalance">⚔️ 开始自动平衡</button>
         </div>
       </div>
 
@@ -99,21 +102,21 @@
     <section class="control-panel audit-panel">
       <div class="audit-header">
         <div>
-          <h3>⚖️ 兵团虚报 / 少报人数修正档案（公开公示 · 自动记忆）</h3>
-          <p class="hint">公式：<strong>修正后人数 = round(申报人数 × 系数 + 增减值)</strong>。例如虚报 20% 可填系数 <code>0.80</code>；常多报 3 人可填增减 <code>-3</code>；少报多来则填 <code>1.15</code> 或 <code>+3</code>。</p>
+          <h3 data-i18n="auditTitle">⚖️ 兵团虚报 / 少报人数修正档案（公开公示 · 自动记忆）</h3>
+          <p class="hint" data-i18n-html="auditFormula">公式：<strong>修正后人数 = round(申报人数 × 系数 + 增减值)</strong>。例如虚报 20% 可填系数 <code>0.80</code>；常多报 3 人可填增减 <code>-3</code>；少报多来则填 <code>1.15</code> 或 <code>+3</code>。</p>
         </div>
-        <button id="addAuditBtn" class="btn btn-secondary" type="button">+ 新增修正规则</button>
+        <button id="addAuditBtn" class="btn btn-secondary" type="button" data-i18n="btnAddAudit">+ 新增修正规则</button>
       </div>
 
       <div class="input-table-wrapper audit-table-wrapper">
         <table class="entry-table">
           <thead>
             <tr>
-              <th style="width: 22%;">兵团番号 (自动忽略方括号)</th>
-              <th style="width: 15%;">人数系数 (默认1.0)</th>
-              <th style="width: 15%;">固定增减 (如 -3 / +2)</th>
-              <th style="width: 38%;">公开公示说明 / 历史出勤依据</th>
-              <th style="width: 10%; text-align: center;">操作</th>
+              <th style="width: 22%;" data-i18n="thAuditTag">兵团番号 (自动忽略方括号)</th>
+              <th style="width: 15%;" data-i18n="thAuditFactor">人数系数 (默认1.0)</th>
+              <th style="width: 15%;" data-i18n="thAuditDelta">固定增减 (如 -3 / +2)</th>
+              <th style="width: 38%;" data-i18n="thAuditReason">公开公示说明 / 历史出勤依据</th>
+              <th style="width: 10%; text-align: center;" data-i18n="thAction">操作</th>
             </tr>
           </thead>
           <tbody id="auditTbody"></tbody>
@@ -124,21 +127,21 @@
     <!-- 3. 双方总览对比栏 -->
     <section class="summary-bar" id="summaryBar">
       <div class="summary-card usa-card">
-        <span class="faction-badge usa-badge">USA 联邦军</span>
-        <div class="stat-main" id="usaRange">0 - 0 人</div>
-        <div class="stat-sub" id="usaAvg">修正均值：0.0 人 | 申报区间：0 - 0 人</div>
+        <span class="faction-badge usa-badge" data-i18n="usaBadge">USA 联邦军</span>
+        <div class="stat-main" id="usaRange">0 - 0</div>
+        <div class="stat-sub" id="usaAvg"></div>
       </div>
 
       <div class="summary-diff">
-        <div class="diff-title">双方修正后人数差值</div>
-        <div class="diff-value" id="diffSummary">下限差 0 | 上限差 0</div>
-        <div class="diff-sub" id="avgDiffSummary">修正均值差：0.0 人</div>
+        <div class="diff-title" data-i18n="diffTitle">双方修正后人数差值</div>
+        <div class="diff-value" id="diffSummary"></div>
+        <div class="diff-sub" id="avgDiffSummary"></div>
       </div>
 
       <div class="summary-card csa-card">
-        <span class="faction-badge csa-badge">CSA 邦联军</span>
-        <div class="stat-main" id="csaRange">0 - 0 人</div>
-        <div class="stat-sub" id="csaAvg">修正均值：0.0 人 | 申报区间：0 - 0 人</div>
+        <span class="faction-badge csa-badge" data-i18n="csaBadge">CSA 邦联军</span>
+        <div class="stat-main" id="csaRange">0 - 0</div>
+        <div class="stat-sub" id="csaAvg"></div>
       </div>
     </section>
 
@@ -147,26 +150,24 @@
       <!-- USA 表格 -->
       <div class="team-panel usa-panel">
         <div class="panel-header usa-header">
-          <h2>USA · 联邦军 (Union)</h2>
-          <span id="usaCountTag" class="count-tag">0 支队伍</span>
+          <h2 data-i18n="usaHeader">USA · 联邦军 (Union)</h2>
+          <span id="usaCountTag" class="count-tag">0</span>
         </div>
         <div class="table-wrapper">
           <table id="usaTable">
             <thead>
               <tr>
-                <th>兵团番号</th>
-                <th>申报人数</th>
-                <th>修正预估</th>
-                <th>状态</th>
-                <th>操作</th>
+                <th data-i18n="resThRegiment">兵团番号</th>
+                <th data-i18n="resThRaw">申报人数</th>
+                <th data-i18n="resThAdj">修正预估</th>
+                <th data-i18n="resThStatus">状态</th>
+                <th data-i18n="thAction">操作</th>
               </tr>
             </thead>
-            <tbody id="usaTbody">
-              <tr class="empty-row"><td colspan="5">暂无分配数据，请录入后点击“开始自动平衡”</td></tr>
-            </tbody>
+            <tbody id="usaTbody"></tbody>
             <tfoot>
               <tr>
-                <td><strong>合计</strong></td>
+                <td><strong data-i18n="tfootTotal">合计</strong></td>
                 <td id="usaFootRaw"><strong>0 - 0</strong></td>
                 <td id="usaFootAdj"><strong>0 - 0 (0.0)</strong></td>
                 <td colspan="2"></td>
@@ -179,26 +180,24 @@
       <!-- CSA 表格 -->
       <div class="team-panel csa-panel">
         <div class="panel-header csa-header">
-          <h2>CSA · 邦联军 (Confederate)</h2>
-          <span id="csaCountTag" class="count-tag">0 支队伍</span>
+          <h2 data-i18n="csaHeader">CSA · 邦联军 (Confederate)</h2>
+          <span id="csaCountTag" class="count-tag">0</span>
         </div>
         <div class="table-wrapper">
           <table id="csaTable">
             <thead>
               <tr>
-                <th>兵团番号</th>
-                <th>申报人数</th>
-                <th>修正预估</th>
-                <th>状态</th>
-                <th>操作</th>
+                <th data-i18n="resThRegiment">兵团番号</th>
+                <th data-i18n="resThRaw">申报人数</th>
+                <th data-i18n="resThAdj">修正预估</th>
+                <th data-i18n="resThStatus">状态</th>
+                <th data-i18n="thAction">操作</th>
               </tr>
             </thead>
-            <tbody id="csaTbody">
-              <tr class="empty-row"><td colspan="5">暂无分配数据，请录入后点击“开始自动平衡”</td></tr>
-            </tbody>
+            <tbody id="csaTbody"></tbody>
             <tfoot>
               <tr>
-                <td><strong>合计</strong></td>
+                <td><strong data-i18n="tfootTotal">合计</strong></td>
                 <td id="csaFootRaw"><strong>0 - 0</strong></td>
                 <td id="csaFootAdj"><strong>0 - 0 (0.0)</strong></td>
                 <td colspan="2"></td>
@@ -209,16 +208,16 @@
       </div>
     </section>
 
-    <!-- 5. 公开公示栏（实时展示本次参战中触发了修正的兵团） -->
+    <!-- 5. 公开公示栏 -->
     <section id="publicNoticeBox" class="public-notice hidden">
-      <div class="notice-title">📢 本次联队人数修正公开公示</div>
+      <div class="notice-title" data-i18n="publicNoticeTitle">📢 本次联队人数修正公开公示</div>
       <ul id="publicNoticeList" class="notice-list"></ul>
     </section>
 
     <!-- 6. 导出区域 -->
     <section class="export-section">
-      <button id="generateImgBtn" class="btn btn-primary" type="button">🖼️ 生成对战排表图片 (PNG)</button>
-      <button id="copyTextBtn" class="btn btn-gold" type="button">📋 一键复制群公告文本(含公示)</button>
+      <button id="generateImgBtn" class="btn btn-primary" type="button" data-i18n="btnGenImg">🖼️ 生成对战排表图片 (PNG)</button>
+      <button id="copyTextBtn" class="btn btn-gold" type="button" data-i18n="btnCopyText">📋 一键复制群公告文本(含公示)</button>
       <span id="copyStatus" class="copy-status"></span>
     </section>
 
@@ -226,19 +225,19 @@
     <div id="imageModal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>对战排表长图预览（可直接右键复制或点击下载发群）</h3>
-          <button id="closeModalBtn" class="btn btn-secondary" type="button">关闭 ✕</button>
+          <h3 data-i18n="modalTitle">对战排表长图预览（可直接右键复制或点击下载发群）</h3>
+          <button id="closeModalBtn" class="btn btn-secondary" type="button" data-i18n="btnCloseModal">关闭 ✕</button>
         </div>
         <div class="modal-body">
-          <img id="previewImg" alt="排表预览图" />
+          <img id="previewImg" alt="Preview" />
         </div>
         <div class="modal-footer">
-          <a id="downloadImgLink" class="btn btn-primary" download="WoR_联队阵营排表.png">⬇️ 下载 PNG 图片</a>
+          <a id="downloadImgLink" class="btn btn-primary" download="WoR_Roster_Balance.png" data-i18n="btnDownloadImg">⬇️ 下载 PNG 图片</a>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="script.js?v=4"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>
