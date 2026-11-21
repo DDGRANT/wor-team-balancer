@@ -1,7 +1,7 @@
-// 本地存储 Key 定义
-const STORAGE_KEY_AUTO = "wor_balancer_autosave_v5";
-const STORAGE_KEY_PRESET = "wor_balancer_preset_v5";
-const STORAGE_KEY_LANG = "wor_balancer_lang_v5";
+// 本地存储 Key 定义（全局唯一声明，无重复）
+const STORAGE_KEY_AUTO = "wor_balancer_autosave_v6";
+const STORAGE_KEY_PRESET = "wor_balancer_preset_v6";
+const STORAGE_KEY_LANG = "wor_balancer_lang_v6";
 
 // 多语言字典（简体中文 / English / 日本語）
 const I18N = {
@@ -57,7 +57,6 @@ const I18N = {
     modalTitle: "对战排表长图预览（可直接右键复制或点击下载发群）",
     btnCloseModal: "关闭 ✕",
     btnDownloadImg: "⬇️ 下载 PNG 图片",
-    // 动态文本模板
     unitPerson: "人",
     teamCount: (n) => `${n} 支队伍`,
     adjModifiedTag: (min, max) => `${min} - ${max} 人 (已修正)`,
@@ -96,13 +95,12 @@ const I18N = {
     alertInvalidJson: "JSON 文件格式不正确，导入失败。",
     alertNoExportData: "当前没有可导出的排表数据！",
     alertNoImgData: "当前没有可生成图片的排表数据，请先点击“开始自动平衡”！",
-    noticeItem: (t, r, formulaStr) => {
+    noticeItem: (item, r, formulaStr) => {
       const reasonStr = r.reason ? `（依据：${r.reason}）` : "";
-      return `${t.name}：申报 ${t.rawMin}-${t.rawMax}人 → 修正为 ${t.min}-${t.max}人 [${formulaStr}]${reasonStr}`;
+      return `${item.name}：申报 ${item.rawMin}-${item.rawMax}人 → 修正为 ${item.min}-${item.max}人 [${formulaStr}]${reasonStr}`;
     },
     factorLabel: (f) => `系数 ×${f}`,
     deltaLabel: (d) => `增减 ${d > 0 ? "+" + d : d}人`,
-    // 导出文本 & Canvas 图片文案
     exportTitle: "【War of Rights 联队阵营分配表】",
     exportUSA: (min, max, avg) => `🔵 USA 联邦军 [修正预估 ${min}-${max} 人 | 均值 ${avg}]：`,
     exportCSA: (min, max, avg) => `⚪ CSA 邦联军 [修正预估 ${min}-${max} 人 | 均值 ${avg}]：`,
@@ -211,9 +209,9 @@ const I18N = {
     alertInvalidJson: "Invalid JSON file format.",
     alertNoExportData: "No balanced roster data to export!",
     alertNoImgData: "No roster data available. Click 'Auto Balance' first!",
-    noticeItem: (t, r, formulaStr) => {
+    noticeItem: (item, r, formulaStr) => {
       const reasonStr = r.reason ? ` (Basis: ${r.reason})` : "";
-      return `${t.name}: Reported ${t.rawMin}-${t.rawMax} → Adjusted ${t.min}-${t.max} [${formulaStr}]${reasonStr}`;
+      return `${item.name}: Reported ${item.rawMin}-${item.rawMax} → Adjusted ${item.min}-${item.max} [${formulaStr}]${reasonStr}`;
     },
     factorLabel: (f) => `Factor ×${f}`,
     deltaLabel: (d) => `Offset ${d > 0 ? "+" + d : d}`,
@@ -325,9 +323,9 @@ const I18N = {
     alertInvalidJson: "JSONファイルの形式が正しくありません。",
     alertNoExportData: "出力する編成データがありません！",
     alertNoImgData: "画像を生成するデータがありません。先に「自動バランス実行」を押してください！",
-    noticeItem: (t, r, formulaStr) => {
+    noticeItem: (item, r, formulaStr) => {
       const reasonStr = r.reason ? `（根拠：${r.reason}）` : "";
-      return `${t.name}：申告 ${t.rawMin}-${t.rawMax}名 → 補正後 ${t.min}-${t.max}名 [${formulaStr}]${reasonStr}`;
+      return `${item.name}：申告 ${item.rawMin}-${item.rawMax}名 → 補正後 ${item.min}-${item.max}名 [${formulaStr}]${reasonStr}`;
     },
     factorLabel: (f) => `係数 ×${f}`,
     deltaLabel: (d) => `増減 ${d > 0 ? "+" + d : d}名`,
@@ -361,7 +359,6 @@ function t(key, ...args) {
   if (typeof val === "function") return val(...args);
   return val !== undefined ? val : key;
 }
-
 
 // 核心数据模型
 let entryRows = [];
@@ -403,18 +400,15 @@ function applyLanguage(lang, reRenderAll = true) {
   localStorage.setItem(STORAGE_KEY_LANG, lang);
   document.documentElement.lang = t("htmlLang");
 
-  // 高亮当前语言按钮
   document.querySelectorAll(".lang-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
   });
 
-  // 替换静态文本节点
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     el.textContent = t(key);
   });
 
-  // 替换包含 HTML 标签的提示节点
   document.querySelectorAll("[data-i18n-html]").forEach((el) => {
     const key = el.getAttribute("data-i18n-html");
     el.innerHTML = t(key);
@@ -525,7 +519,7 @@ document.getElementById("loadPresetBtn").addEventListener("click", () => {
 // 导出 JSON 配置文件
 document.getElementById("exportJsonBtn").addEventListener("click", () => {
   const backupData = {
-    version: "WoR-Balancer-v5",
+    version: "WoR-Balancer-v6",
     exportedAt: new Date().toISOString(),
     balanceMode: balanceModeSelect.value,
     entryRows,
