@@ -39,9 +39,9 @@ body {
 
 .header {
   text-align: center;
-  padding: 20px 0 24px;
+  padding: 16px 0 22px;
   border-bottom: 1px solid var(--border-color);
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .header h1 {
@@ -65,13 +65,151 @@ body {
   margin-bottom: 22px;
 }
 
+.panel-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-group {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  background: #161a20;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+  border-color: #505b6d;
+}
+
+.tab-btn.active {
+  background: rgba(200, 162, 82, 0.16);
+  color: var(--gold-accent);
+  border-color: var(--gold-accent);
+}
+
+.memory-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.save-indicator {
+  font-size: 0.82rem;
+  color: #6fd08c;
+  margin-right: 4px;
+}
+
+.btn-outline-sm {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid #444e5e;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.btn-outline-sm:hover {
+  border-color: var(--gold-accent);
+  color: var(--gold-accent);
+}
+
+/* 表格录入样式 */
+.input-table-wrapper {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-input);
+}
+
+.entry-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.entry-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #1a1f27;
+  color: var(--gold-accent);
+  font-size: 0.85rem;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.entry-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #232933;
+}
+
+.cell-input,
+.cell-select {
+  width: 100%;
+  background: #191e26;
+  color: var(--text-main);
+  border: 1px solid #353e4d;
+  border-radius: 4px;
+  padding: 6px 9px;
+  font-size: 0.92rem;
+}
+
+.cell-input:focus,
+.cell-select:focus {
+  outline: none;
+  border-color: var(--gold-accent);
+}
+
+.del-row-btn {
+  background: transparent;
+  color: #e06c75;
+  border: 1px solid rgba(224, 108, 117, 0.35);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.del-row-btn:hover {
+  background: rgba(224, 108, 117, 0.16);
+}
+
+.table-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* 文本输入模式 */
 .label-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .label-row label {
@@ -80,7 +218,7 @@ body {
 }
 
 .hint {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--text-muted);
 }
 
@@ -101,7 +239,6 @@ textarea {
   font-size: 0.95rem;
   padding: 12px;
   resize: vertical;
-  transition: border-color 0.2s;
 }
 
 textarea:focus {
@@ -109,13 +246,16 @@ textarea:focus {
   border-color: var(--gold-accent);
 }
 
+/* 工具栏 */
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 14px;
-  margin-top: 14px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
 }
 
 .mode-select {
@@ -143,8 +283,8 @@ select {
 .btn {
   border: none;
   border-radius: 5px;
-  padding: 9px 18px;
-  font-size: 0.92rem;
+  padding: 8px 16px;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -167,6 +307,16 @@ select {
 
 .btn-secondary:hover {
   background: #384150;
+}
+
+.btn-danger-outline {
+  background: transparent;
+  color: #e06c75;
+  border: 1px solid rgba(224, 108, 117, 0.45);
+}
+
+.btn-danger-outline:hover {
+  background: rgba(224, 108, 117, 0.15);
 }
 
 .btn-gold {
@@ -282,7 +432,7 @@ select {
   color: var(--text-muted);
 }
 
-/* 左右表格区 */
+/* 左右结果表格区 */
 .tables-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
