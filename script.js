@@ -1,4 +1,4 @@
-// 本地存储 Key 定义（全局唯一声明，无重复）
+// 本地存储 Key 定义（全局唯一声明）
 const STORAGE_KEY_AUTO = "wor_balancer_autosave_v6";
 const STORAGE_KEY_PRESET = "wor_balancer_preset_v6";
 const STORAGE_KEY_LANG = "wor_balancer_lang_v6";
@@ -712,22 +712,22 @@ function renderAuditTable() {
       return `
         <tr>
           <td>
-            <input type="text" class="cell-input" placeholder="${escapeHtml(t("phAuditTag"))}"
+            <input type="text" id="audit_tag_${rule.id}" name="audit_tag_${rule.id}" class="cell-input" placeholder="${escapeHtml(t("phAuditTag"))}"
               value="${escapeHtml(rule.tag)}"
               oninput="updateAuditRow('${rule.id}', 'tag', this.value)" />
           </td>
           <td>
-            <input type="number" step="0.05" min="0.1" max="3.0" class="cell-input"
+            <input type="number" id="audit_factor_${rule.id}" name="audit_factor_${rule.id}" step="0.05" min="0.1" max="3.0" class="cell-input"
               value="${rule.factor}"
               onchange="updateAuditRow('${rule.id}', 'factor', this.value)" />
           </td>
           <td>
-            <input type="number" step="1" min="-100" max="100" class="cell-input"
+            <input type="number" id="audit_delta_${rule.id}" name="audit_delta_${rule.id}" step="1" min="-100" max="100" class="cell-input"
               value="${rule.delta}"
               onchange="updateAuditRow('${rule.id}', 'delta', this.value)" />
           </td>
           <td>
-            <input type="text" class="cell-input" placeholder="${escapeHtml(t("phAuditReason"))}"
+            <input type="text" id="audit_reason_${rule.id}" name="audit_reason_${rule.id}" class="cell-input" placeholder="${escapeHtml(t("phAuditReason"))}"
               value="${escapeHtml(rule.reason)}"
               oninput="updateAuditRow('${rule.id}', 'reason', this.value)" />
           </td>
@@ -782,17 +782,17 @@ function renderEntryTable() {
       return `
         <tr data-id="${row.id}">
           <td>
-            <input type="text" class="cell-input" placeholder="${escapeHtml(t("phRegiment"))}"
+            <input type="text" id="entry_name_${row.id}" name="entry_name_${row.id}" class="cell-input" placeholder="${escapeHtml(t("phRegiment"))}"
               value="${escapeHtml(row.name)}"
               oninput="updateEntryRow('${row.id}', 'name', this.value)" />
           </td>
           <td>
-            <input type="number" class="cell-input" min="0" max="500"
+            <input type="number" id="entry_min_${row.id}" name="entry_min_${row.id}" class="cell-input" min="0" max="500"
               value="${row.min}"
               onchange="updateEntryRow('${row.id}', 'min', this.value)" />
           </td>
           <td>
-            <input type="number" class="cell-input" min="0" max="500"
+            <input type="number" id="entry_max_${row.id}" name="entry_max_${row.id}" class="cell-input" min="0" max="500"
               value="${row.max}"
               onchange="updateEntryRow('${row.id}', 'max', this.value)" />
           </td>
@@ -800,7 +800,7 @@ function renderEntryTable() {
             <span id="preview_${row.id}" class="adj-preview ${isModified ? "modified" : ""}">${previewText}</span>
           </td>
           <td>
-            <select class="cell-select" onchange="updateEntryRow('${row.id}', 'lockedFaction', this.value)">
+            <select id="entry_lock_${row.id}" name="entry_lock_${row.id}" class="cell-select" onchange="updateEntryRow('${row.id}', 'lockedFaction', this.value)">
               <option value="" ${!row.lockedFaction ? "selected" : ""}>${escapeHtml(t("lockAuto"))}</option>
               <option value="USA" ${row.lockedFaction === "USA" ? "selected" : ""}>${escapeHtml(t("lockUSA"))}</option>
               <option value="CSA" ${row.lockedFaction === "CSA" ? "selected" : ""}>${escapeHtml(t("lockCSA"))}</option>
