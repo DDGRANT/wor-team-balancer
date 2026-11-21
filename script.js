@@ -1,9 +1,10 @@
 // 本地存储 Key 定义
-const STORAGE_KEY_AUTO = "wor_balancer_autosave_v2";
-const STORAGE_KEY_PRESET = "wor_balancer_preset_v2";
+const STORAGE_KEY_AUTO = "wor_balancer_autosave_v3";
+const STORAGE_KEY_PRESET = "wor_balancer_preset_v3";
 
 // 核心数据模型
 let entryRows = []; // [{ id, name, min, max, lockedFaction }]
+let auditRules = []; // [{ id, tag, factor, delta, reason }]
 let currentState = { usa: [], csa: [] };
 
 // DOM 引用
@@ -12,6 +13,7 @@ const tabTextBtn = document.getElementById("tabTextBtn");
 const tableInputView = document.getElementById("tableInputView");
 const textInputView = document.getElementById("textInputView");
 const entryTbody = document.getElementById("entryTbody");
+const auditTbody = document.getElementById("auditTbody");
 const rosterInput = document.getElementById("rosterInput");
 const balanceModeSelect = document.getElementById("balanceMode");
 const parseWarning = document.getElementById("parseWarning");
@@ -43,16 +45,23 @@ function switchInputTab(tab) {
   }
 }
 
-// 添加一行兵团
+// 添加报名兵团行
 document.getElementById("addRowBtn").addEventListener("click", () => {
-  entryRows.push({
-    id: genId(),
-    name: "",
-    min: 10,
-    max: 15,
-    lockedFaction: null
-  });
+  entryRows.push(createEmptyRow());
   renderEntryTable();
+  saveToAutoSave();
+});
+
+// 添加虚报/少报修正规则行
+document.getElementById("addAuditBtn").addEventListener("click", () => {
+  auditRules.push({
+    id: genId(),
+    tag: "",
+    factor: 1.0,
+    delta: 0,
+    reason: ""
+  });
+  renderAuditTable();
   saveToAutoSave();
 });
 
@@ -77,7 +86,7 @@ document.getElementById("parseToTableBtn").addEventListener("click", () => {
 
 // 存为常用名单模板
 document.getElementById("savePresetBtn").addEventListener("click", () => {
-  const validRows = getCleanRowsFromEntry();
+  const validRows = entryRows.filter((r) => r.name.trim() !== "");
   if (validRows.length === 0) {
     alert("当前表格没有可保存的有效兵团数据！");
     return;
@@ -106,26 +115,107 @@ document.getElementById("loadPresetBtn").addEventListener("click", () => {
   }
 });
 
-// 填入示例数据
+// 导出 JSON 配置文件
+document.getElementById("exportJsonBtn").addEventListener("click", () => {
+  const backupData = {
+    version: "WoR-Balancer-v3",
+    exportedAt: new Date().toISOString(),
+    balanceMode: balanceModeSelect.value,
+    entryRows,
+    auditRules,
+    presetRows: JSON.parse(localStorage.getItem(STORAGE_KEY_PRESET) || "[]")
+  };
+  const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `WoR_队伍平衡配置_${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  flashSaveIndicator("✔ 已导出 JSON 配置文件！");
+});
+
+// 导入 JSON 配置文件
+const importJsonInput = document.getElementById("importJsonInput");
+document.getElementById("importJsonBtn").addEventListener("click", () => {
+  importJsonInput.click();
+});
+
+importJsonInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      if (Array.isArray(data.entryRows)) {
+        entryRows = data.entryRows.length > 0 ? data.entryRows : [createEmptyRow()];
+      }
+      if (Array.isArray(data.auditRules)) {
+        auditRules = data.auditRules;
+      }
+      if (Array.isArray(data.presetRows) && data.presetRows.length > 0) {
+        localStorage.setItem(STORAGE_KEY_PRESET, JSON.stringify(data.presetRows));
+      }
+      if (data.balanceMode) {
+        balanceModeSelect.value = data.balanceMode;
+      }
+      renderEntryTable();
+      renderAuditTable();
+      syncTableToText();
+      saveToAutoSave();
+      runBalance();
+      flashSaveIndicator("✔ JSON 配置导入成功！");
+    } catch (err) {
+      alert("JSON 文件格式不正确，导入失败。");
+    }
+    importJsonInput.value = "";
+  };
+  reader.readAsText(file);
+});
+
+// 填入示例数据（含虚报/少报示例）
 document.getElementById("sampleBtn").addEventListener("click", () => {
   entryRows = [
     { id: genId(), name: "[FEX]", min: 15, max: 20, lockedFaction: null },
     { id: genId(), name: "[HD]", min: 25, max: 30, lockedFaction: null },
     { id: genId(), name: "[1stTX]", min: 12, max: 16, lockedFaction: null },
-    { id: genId(), name: "[69thNY]", min: 18, max: 22, lockedFaction: null },
+    { id: genId(), name: "[69thNY]", min: 20, max: 25, lockedFaction: null },
     { id: genId(), name: "[4thVA]", min: 10, max: 14, lockedFaction: "CSA" },
     { id: genId(), name: "[20thME]", min: 14, max: 18, lockedFaction: "USA" },
-    { id: genId(), name: "[9thNY]", min: 8, max: 12, lockedFaction: null },
+    { id: genId(), name: "[9thNY]", min: 8, max: 10, lockedFaction: null },
     { id: genId(), name: "散人玩家", min: 10, max: 15, lockedFaction: null }
   ];
+
+  if (auditRules.length === 0) {
+    auditRules = [
+      {
+        id: genId(),
+        tag: "[69thNY]",
+        factor: 0.8,
+        delta: 0,
+        reason: "近三次联队实际到场率约 80%，按八折修正虚报"
+      },
+      {
+        id: genId(),
+        tag: "[9thNY]",
+        factor: 1.0,
+        delta: 3,
+        reason: "保守少报倾向，实际开战后通常多到 3 人左右"
+      }
+    ];
+  }
+
   parseWarning.classList.add("hidden");
+  renderAuditTable();
   renderEntryTable();
   syncTableToText();
   saveToAutoSave();
   runBalance();
 });
 
-// 清空全部
+// 清空报名表（保留修正档案，避免误删历史信誉记录）
 document.getElementById("clearBtn").addEventListener("click", () => {
   entryRows = [createEmptyRow()];
   rosterInput.value = "";
@@ -146,7 +236,6 @@ balanceModeSelect.addEventListener("change", () => {
 
 // 点击“开始自动平衡”
 document.getElementById("balanceBtn").addEventListener("click", () => {
-  // 如果当前在文本模式，先自动解析同步到表格
   if (!textInputView.classList.contains("hidden")) {
     const { teams, invalidLines } = parseInputText(rosterInput.value);
     showWarnings(invalidLines);
@@ -164,19 +253,124 @@ document.getElementById("balanceBtn").addEventListener("click", () => {
   runBalance();
 });
 
-// 一键复制排表文本
+// 导出按钮绑定
 document.getElementById("copyTextBtn").addEventListener("click", copyScheduleText);
+document.getElementById("generateImgBtn").addEventListener("click", generateScheduleImage);
+document.getElementById("closeModalBtn").addEventListener("click", () => {
+  document.getElementById("imageModal").classList.add("hidden");
+});
 
 function genId() {
-  return `team_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  return `id_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
 function createEmptyRow() {
   return { id: genId(), name: "", min: 10, max: 15, lockedFaction: null };
 }
 
+// 标准化团标用于匹配（去掉方括号、空格并转大写，例如 "[FEX]" -> "FEX"）
+function normalizeTag(str) {
+  return String(str || "")
+    .replace(/[\[\]【】\(\)（）\s]/g, "")
+    .toUpperCase();
+}
+
+// 查找匹配的虚报/少报修正规则
+function findAuditRuleForTeam(teamName) {
+  const normName = normalizeTag(teamName);
+  if (!normName) return null;
+  return auditRules.find((r) => {
+    const normRule = normalizeTag(r.tag);
+    if (!normRule) return false;
+    return normName === normRule || normName.includes(normRule) || normRule.includes(normName);
+  }) || null;
+}
+
+// 计算单支队伍的修正人数
+function applyAuditToTeam(rawMin, rawMax, rule) {
+  if (!rule) {
+    return { adjMin: rawMin, adjMax: rawMax, isModified: false };
+  }
+  const factor = Number.isFinite(parseFloat(rule.factor)) ? parseFloat(rule.factor) : 1.0;
+  const delta = Number.isFinite(parseInt(rule.delta, 10)) ? parseInt(rule.delta, 10) : 0;
+
+  let adjMin = Math.max(0, Math.round(rawMin * factor + delta));
+  let adjMax = Math.max(0, Math.round(rawMax * factor + delta));
+  if (adjMin > adjMax) [adjMin, adjMax] = [adjMax, adjMin];
+
+  const isModified = adjMin !== rawMin || adjMax !== rawMax;
+  return { adjMin, adjMax, isModified };
+}
+
 /**
- * 渲染可视化录入表格
+ * 渲染修正档案表
+ */
+function renderAuditTable() {
+  if (auditRules.length === 0) {
+    auditTbody.innerHTML = `<tr class="empty-row"><td colspan="5">暂无虚报/少报修正记录（所有兵团均按 100% 申报人数计算）</td></tr>`;
+    return;
+  }
+
+  auditTbody.innerHTML = auditRules
+    .map((rule) => {
+      return `
+        <tr>
+          <td>
+            <input type="text" class="cell-input" placeholder="如 [FEX] 或 FEX"
+              value="${escapeHtml(rule.tag)}"
+              oninput="updateAuditRow('${rule.id}', 'tag', this.value)" />
+          </td>
+          <td>
+            <input type="number" step="0.05" min="0.1" max="3.0" class="cell-input"
+              value="${rule.factor}"
+              onchange="updateAuditRow('${rule.id}', 'factor', this.value)" />
+          </td>
+          <td>
+            <input type="number" step="1" min="-100" max="100" class="cell-input"
+              value="${rule.delta}"
+              onchange="updateAuditRow('${rule.id}', 'delta', this.value)" />
+          </td>
+          <td>
+            <input type="text" class="cell-input" placeholder="填写公示依据，如：近期出勤率约80%"
+              value="${escapeHtml(rule.reason)}"
+              oninput="updateAuditRow('${rule.id}', 'reason', this.value)" />
+          </td>
+          <td style="text-align: center;">
+            <button type="button" class="del-row-btn" onclick="deleteAuditRow('${rule.id}')">删除</button>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+window.updateAuditRow = function (id, field, value) {
+  const rule = auditRules.find((r) => r.id === id);
+  if (!rule) return;
+
+  if (field === "tag" || field === "reason") {
+    rule[field] = value;
+  } else if (field === "factor") {
+    const num = parseFloat(value);
+    rule.factor = Number.isFinite(num) && num > 0 ? num : 1.0;
+  } else if (field === "delta") {
+    const num = parseInt(value, 10);
+    rule.delta = Number.isFinite(num) ? num : 0;
+  }
+
+  renderEntryTable();
+  saveToAutoSave();
+};
+
+window.deleteAuditRow = function (id) {
+  auditRules = auditRules.filter((r) => r.id !== id);
+  renderAuditTable();
+  renderEntryTable();
+  saveToAutoSave();
+};
+
+/**
+ * 渲染报名兵团录入表
  */
 function renderEntryTable() {
   if (entryRows.length === 0) {
@@ -184,7 +378,13 @@ function renderEntryTable() {
   }
 
   entryTbody.innerHTML = entryRows
-    .map((row, index) => {
+    .map((row) => {
+      const rule = findAuditRuleForTeam(row.name);
+      const { adjMin, adjMax, isModified } = applyAuditToTeam(row.min, row.max, rule);
+      const previewText = isModified
+        ? `${adjMin} - ${adjMax} 人 (已修正)`
+        : `${adjMin} - ${adjMax} 人`;
+
       return `
         <tr data-id="${row.id}">
           <td>
@@ -203,6 +403,9 @@ function renderEntryTable() {
               onchange="updateEntryRow('${row.id}', 'max', this.value)" />
           </td>
           <td>
+            <span id="preview_${row.id}" class="adj-preview ${isModified ? "modified" : ""}">${previewText}</span>
+          </td>
+          <td>
             <select class="cell-select" onchange="updateEntryRow('${row.id}', 'lockedFaction', this.value)">
               <option value="" ${!row.lockedFaction ? "selected" : ""}>自动分配</option>
               <option value="USA" ${row.lockedFaction === "USA" ? "selected" : ""}>锁定 USA 联邦</option>
@@ -210,7 +413,7 @@ function renderEntryTable() {
             </select>
           </td>
           <td style="text-align: center;">
-            <button type="button" class="del-row-btn" onclick="deleteEntryRow('${row.id}')" title="删除此行">删除</button>
+            <button type="button" class="del-row-btn" onclick="deleteEntryRow('${row.id}')">删除</button>
           </td>
         </tr>
       `;
@@ -218,7 +421,6 @@ function renderEntryTable() {
     .join("");
 }
 
-// 表格单元格实时更新
 window.updateEntryRow = function (id, field, value) {
   const row = entryRows.find((r) => r.id === id);
   if (!row) return;
@@ -243,10 +445,18 @@ window.updateEntryRow = function (id, field, value) {
     row.lockedFaction = value === "USA" || value === "CSA" ? value : null;
   }
 
+  // 实时更新该行的修正预览文本而不失焦
+  const previewEl = document.getElementById(`preview_${row.id}`);
+  if (previewEl) {
+    const rule = findAuditRuleForTeam(row.name);
+    const { adjMin, adjMax, isModified } = applyAuditToTeam(row.min, row.max, rule);
+    previewEl.textContent = isModified ? `${adjMin} - ${adjMax} 人 (已修正)` : `${adjMin} - ${adjMax} 人`;
+    previewEl.className = `adj-preview ${isModified ? "modified" : ""}`;
+  }
+
   saveToAutoSave();
 };
 
-// 删除录入表格行
 window.deleteEntryRow = function (id) {
   entryRows = entryRows.filter((r) => r.id !== id);
   if (entryRows.length === 0) {
@@ -256,7 +466,6 @@ window.deleteEntryRow = function (id) {
   saveToAutoSave();
 };
 
-// 将当前表格同步生成为纯文本（方便切换去文本页查看或复制）
 function syncTableToText() {
   const lines = entryRows
     .filter((r) => r.name.trim() !== "")
@@ -268,28 +477,34 @@ function syncTableToText() {
   rosterInput.value = lines.join("\n");
 }
 
-// 获取有效且格式化后的兵团对象数组
+// 获取结合了虚报/少报修正后的有效兵团列表
 function getCleanRowsFromEntry() {
   return entryRows
     .filter((r) => r.name.trim() !== "" || r.min > 0 || r.max > 0)
     .map((r, idx) => {
-      let min = Math.max(0, parseInt(r.min, 10) || 0);
-      let max = Math.max(0, parseInt(r.max, 10) || 0);
-      if (min > max) [min, max] = [max, min];
+      let rawMin = Math.max(0, parseInt(r.min, 10) || 0);
+      let rawMax = Math.max(0, parseInt(r.max, 10) || 0);
+      if (rawMin > rawMax) [rawMin, rawMax] = [rawMax, rawMin];
+
+      const name = r.name.trim() || `未命名队伍#${idx + 1}`;
+      const auditRule = findAuditRuleForTeam(name);
+      const { adjMin, adjMax, isModified } = applyAuditToTeam(rawMin, rawMax, auditRule);
+
       return {
         id: r.id,
-        name: r.name.trim() || `未命名队伍#${idx + 1}`,
-        min,
-        max,
-        avg: (min + max) / 2,
-        lockedFaction: r.lockedFaction || null
+        name,
+        rawMin,
+        rawMax,
+        min: adjMin, // 平衡算法使用修正后人数
+        max: adjMax,
+        avg: (adjMin + adjMax) / 2,
+        lockedFaction: r.lockedFaction || null,
+        isModified,
+        auditRule: isModified ? auditRule : null
       };
     });
 }
 
-/**
- * 解析文本输入
- */
 function parseInputText(rawText) {
   const lines = rawText.split(/\r?\n/);
   const teams = [];
@@ -325,7 +540,6 @@ function parseInputText(rawText) {
       name,
       min,
       max,
-      avg: (min + max) / 2,
       lockedFaction
     });
   });
@@ -343,7 +557,7 @@ function showWarnings(invalidLines) {
 }
 
 /**
- * 阵营人数平衡核心算法
+ * 阵营人数平衡核心算法（基于修正后人数）
  */
 function balanceTeams(teams, mode = "balanced") {
   const fixedUSA = [];
@@ -439,12 +653,14 @@ function balanceTeams(teams, mode = "balanced") {
 function sumStats(list) {
   return list.reduce(
     (acc, t) => {
+      acc.rawMin += t.rawMin ?? t.min;
+      acc.rawMax += t.rawMax ?? t.max;
       acc.min += t.min;
       acc.max += t.max;
       acc.avg += t.avg;
       return acc;
     },
-    { min: 0, max: 0, avg: 0 }
+    { rawMin: 0, rawMax: 0, min: 0, max: 0, avg: 0 }
   );
 }
 
@@ -462,7 +678,6 @@ function runBalance() {
   saveToAutoSave();
 }
 
-// 手动对调阵营（同样会触发自动记忆）
 window.swapTeamFaction = function (teamId, fromFaction) {
   const toFaction = fromFaction === "usa" ? "csa" : "usa";
   const sourceList = currentState[fromFaction];
@@ -479,20 +694,21 @@ function renderResultTables() {
   renderSingleResultTable("usa", currentState.usa);
   renderSingleResultTable("csa", currentState.csa);
   updateSummary();
+  renderPublicNotice();
 }
 
 function renderSingleResultTable(faction, list) {
   const tbody = document.getElementById(`${faction}Tbody`);
   const countTag = document.getElementById(`${faction}CountTag`);
-  const footRange = document.getElementById(`${faction}FootRange`);
-  const footAvg = document.getElementById(`${faction}FootAvg`);
+  const footRaw = document.getElementById(`${faction}FootRaw`);
+  const footAdj = document.getElementById(`${faction}FootAdj`);
 
   countTag.textContent = `${list.length} 支队伍`;
 
   if (list.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="5">暂无队伍分配至此阵营</td></tr>`;
-    footRange.innerHTML = `<strong>0 - 0</strong>`;
-    footAvg.innerHTML = `<strong>0.0</strong>`;
+    footRaw.innerHTML = `<strong>0 - 0</strong>`;
+    footAdj.innerHTML = `<strong>0 - 0 (0.0)</strong>`;
     return;
   }
 
@@ -500,17 +716,26 @@ function renderSingleResultTable(faction, list) {
 
   tbody.innerHTML = list
     .map((t) => {
-      const rangeText = t.min === t.max ? `${t.min} 人` : `${t.min} - ${t.max} 人`;
-      const statusHtml = t.lockedFaction
-        ? `<span class="tag-lock">锁定 ${t.lockedFaction}</span>`
-        : `<span class="tag-auto">自动分配</span>`;
+      const rawText = t.rawMin === t.rawMax ? `${t.rawMin} 人` : `${t.rawMin}-${t.rawMax} 人`;
+      const adjText = t.min === t.max ? `${t.min} 人` : `${t.min}-${t.max} 人`;
+
+      const badges = [];
+      if (t.lockedFaction) {
+        badges.push(`<span class="tag-lock">锁定 ${t.lockedFaction}</span>`);
+      }
+      if (t.isModified) {
+        badges.push(`<span class="tag-audit">已修正</span>`);
+      }
+      if (badges.length === 0) {
+        badges.push(`<span class="tag-auto">自动分配</span>`);
+      }
 
       return `
         <tr>
           <td><strong>${escapeHtml(t.name)}</strong></td>
-          <td>${rangeText}</td>
-          <td>${t.avg.toFixed(1)}</td>
-          <td>${statusHtml}</td>
+          <td>${rawText}</td>
+          <td><strong style="color:${t.isModified ? "#f0b866" : "inherit"}">${adjText}</strong></td>
+          <td>${badges.join(" ")}</td>
           <td>
             <button class="swap-btn" type="button" onclick="swapTeamFaction('${t.id}', '${faction}')">
               转至 ${targetName} ⇄
@@ -522,8 +747,8 @@ function renderSingleResultTable(faction, list) {
     .join("");
 
   const stats = sumStats(list);
-  footRange.innerHTML = `<strong>${stats.min} - ${stats.max} 人</strong>`;
-  footAvg.innerHTML = `<strong>${stats.avg.toFixed(1)}</strong>`;
+  footRaw.innerHTML = `<strong>${stats.rawMin} - ${stats.rawMax} 人</strong>`;
+  footAdj.innerHTML = `<strong>${stats.min} - ${stats.max} 人 (均值 ${stats.avg.toFixed(1)})</strong>`;
 }
 
 function updateSummary() {
@@ -531,23 +756,52 @@ function updateSummary() {
   const cStats = sumStats(currentState.csa);
 
   document.getElementById("usaRange").textContent = `${uStats.min} - ${uStats.max} 人`;
-  document.getElementById("usaAvg").textContent = `预期均值：${uStats.avg.toFixed(1)} 人 | 兵团数：${currentState.usa.length}`;
+  document.getElementById("usaAvg").textContent = `修正均值：${uStats.avg.toFixed(1)} 人 | 原始申报：${uStats.rawMin}-${uStats.rawMax} 人`;
 
   document.getElementById("csaRange").textContent = `${cStats.min} - ${cStats.max} 人`;
-  document.getElementById("csaAvg").textContent = `预期均值：${cStats.avg.toFixed(1)} 人 | 兵团数：${currentState.csa.length}`;
+  document.getElementById("csaAvg").textContent = `修正均值：${cStats.avg.toFixed(1)} 人 | 原始申报：${cStats.rawMin}-${cStats.rawMax} 人`;
 
   const minDiff = Math.abs(uStats.min - cStats.min);
   const maxDiff = Math.abs(uStats.max - cStats.max);
   const avgDiff = Math.abs(uStats.avg - cStats.avg);
 
   document.getElementById("diffSummary").textContent = `下限差 ${minDiff} 人 | 上限差 ${maxDiff} 人`;
-  document.getElementById("avgDiffSummary").textContent = `预期均值差：${avgDiff.toFixed(1)} 人`;
+  document.getElementById("avgDiffSummary").textContent = `修正均值差：${avgDiff.toFixed(1)} 人`;
 }
 
-// 自动保存到 localStorage
+// 获取本次参与平衡中触发了虚报/少报修正的公示条目
+function getActivePublicNotices() {
+  const allTeams = [...currentState.usa, ...currentState.csa];
+  return allTeams
+    .filter((t) => t.isModified && t.auditRule)
+    .map((t) => {
+      const r = t.auditRule;
+      const factorPart = r.factor !== 1 ? `系数 ×${r.factor}` : "";
+      const deltaPart = r.delta !== 0 ? `增减 ${r.delta > 0 ? "+" + r.delta : r.delta}人` : "";
+      const formulaStr = [factorPart, deltaPart].filter(Boolean).join("，");
+      const reasonStr = r.reason ? `（依据：${r.reason}）` : "";
+      return `${t.name}：申报 ${t.rawMin}-${t.rawMax}人 → 修正为 ${t.min}-${t.max}人 [${formulaStr}]${reasonStr}`;
+    });
+}
+
+function renderPublicNotice() {
+  const box = document.getElementById("publicNoticeBox");
+  const listEl = document.getElementById("publicNoticeList");
+  const notices = getActivePublicNotices();
+
+  if (notices.length === 0) {
+    box.classList.add("hidden");
+    return;
+  }
+
+  box.classList.remove("hidden");
+  listEl.innerHTML = notices.map((text) => `<li>${escapeHtml(text)}</li>`).join("");
+}
+
 function saveToAutoSave() {
   const payload = {
     entryRows,
+    auditRules,
     currentState,
     balanceMode: balanceModeSelect.value
   };
@@ -555,11 +809,11 @@ function saveToAutoSave() {
   flashSaveIndicator("● 已自动保存至本地");
 }
 
-// 页面启动时读取 localStorage
 function loadFromAutoSave() {
   const raw = localStorage.getItem(STORAGE_KEY_AUTO);
   if (!raw) {
     entryRows = [createEmptyRow()];
+    renderAuditTable();
     renderEntryTable();
     return;
   }
@@ -569,16 +823,19 @@ function loadFromAutoSave() {
     entryRows = Array.isArray(saved.entryRows) && saved.entryRows.length > 0
       ? saved.entryRows
       : [createEmptyRow()];
+    auditRules = Array.isArray(saved.auditRules) ? saved.auditRules : [];
     currentState = saved.currentState || { usa: [], csa: [] };
     if (saved.balanceMode) {
       balanceModeSelect.value = saved.balanceMode;
     }
+    renderAuditTable();
     renderEntryTable();
     syncTableToText();
     renderResultTables();
     flashSaveIndicator("● 已恢复上次的本地记忆数据");
   } catch (e) {
     entryRows = [createEmptyRow()];
+    renderAuditTable();
     renderEntryTable();
   }
 }
@@ -587,6 +844,7 @@ function flashSaveIndicator(msg) {
   saveIndicator.textContent = msg;
 }
 
+// 一键复制群公告纯文本（含虚报/少报公示）
 function copyScheduleText() {
   const uStats = sumStats(currentState.usa);
   const cStats = sumStats(currentState.csa);
@@ -596,28 +854,220 @@ function copyScheduleText() {
     return;
   }
 
-  const formatLine = (t) =>
-    t.min === t.max ? `• ${t.name} (${t.min}人)` : `• ${t.name} (${t.min}-${t.max}人)`;
+  const formatLine = (t) => {
+    const adj = t.min === t.max ? `${t.min}人` : `${t.min}-${t.max}人`;
+    if (t.isModified) {
+      return `• ${t.name}：修正 ${adj}（原报 ${t.rawMin}-${t.rawMax}人）`;
+    }
+    return `• ${t.name}：${adj}`;
+  };
 
-  const output = [
+  const lines = [
     "【War of Rights 联队阵营分配表】",
     "",
-    `🔵 USA 联邦军 [预计 ${uStats.min}-${uStats.max} 人 | 均值 ${uStats.avg.toFixed(1)}]：`,
+    `🔵 USA 联邦军 [修正预估 ${uStats.min}-${uStats.max} 人 | 均值 ${uStats.avg.toFixed(1)}]：`,
     ...currentState.usa.map(formatLine),
     "",
-    `⚪ CSA 邦联军 [预计 ${cStats.min}-${cStats.max} 人 | 均值 ${cStats.avg.toFixed(1)}]：`,
+    `⚪ CSA 邦联军 [修正预估 ${cStats.min}-${cStats.max} 人 | 均值 ${cStats.avg.toFixed(1)}]：`,
     ...currentState.csa.map(formatLine),
     "",
-    `📊 双方人数差：下限差 ${Math.abs(uStats.min - cStats.min)} 人 / 上限差 ${Math.abs(uStats.max - cStats.max)} 人`
-  ].join("\n");
+    `📊 双方修正后人数差：下限差 ${Math.abs(uStats.min - cStats.min)} 人 / 上限差 ${Math.abs(uStats.max - cStats.max)} 人`
+  ];
 
-  navigator.clipboard.writeText(output).then(() => {
+  const notices = getActivePublicNotices();
+  if (notices.length > 0) {
+    lines.push("", "⚖️ 【人数修正公开公示】：");
+    notices.forEach((n) => lines.push(`- ${n}`));
+  }
+
+  navigator.clipboard.writeText(lines.join("\n")).then(() => {
     const status = document.getElementById("copyStatus");
     status.textContent = "✔ 已复制到剪贴板，可直接粘贴发送！";
     setTimeout(() => {
       status.textContent = "";
     }, 3000);
   });
+}
+
+/**
+ * 纯前端 Canvas 绘制高清对战排表长图（含公示栏）
+ */
+function generateScheduleImage() {
+  if (currentState.usa.length === 0 && currentState.csa.length === 0) {
+    alert("当前没有可生成图片的排表数据，请先点击“开始自动平衡”！");
+    return;
+  }
+
+  const uStats = sumStats(currentState.usa);
+  const cStats = sumStats(currentState.csa);
+  const notices = getActivePublicNotices();
+
+  const width = 1040;
+  const maxRows = Math.max(currentState.usa.length, currentState.csa.length, 1);
+  const rowHeight = 42;
+  const tableStartY = 195;
+  const tableHeight = 44 + maxRows * rowHeight + 46; // 表头 + 数据行 + 合计行
+  const noticeBlockHeight = notices.length > 0 ? 55 + notices.length * 28 : 0;
+  const height = tableStartY + tableHeight + noticeBlockHeight + 65;
+
+  const canvas = document.createElement("canvas");
+  const dpr = 2; // 2倍高清视网膜屏分辨率
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  // 背景与外边框
+  ctx.fillStyle = "#14171c";
+  ctx.fillRect(0, 0, width, height);
+  ctx.strokeStyle = "#c8a252";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(12, 12, width - 24, height - 24);
+
+  // 标题区
+  ctx.fillStyle = "#c8a252";
+  ctx.font = "bold 28px 'Microsoft YaHei', sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("WAR OF RIGHTS · 联队阵营人数平衡排表", width / 2, 58);
+
+  ctx.fillStyle = "#9aa3b2";
+  ctx.font = "14px 'Microsoft YaHei', sans-serif";
+  const timeStr = new Date().toLocaleString("zh-CN", { hour12: false });
+  const minDiff = Math.abs(uStats.min - cStats.min);
+  const maxDiff = Math.abs(uStats.max - cStats.max);
+  ctx.fillText(`生成时间：${timeStr}   |   双方修正后人数差：下限差 ${minDiff} 人 / 上限差 ${maxDiff} 人`, width / 2, 86);
+
+  // 顶部总览卡片
+  drawSummaryBox(ctx, 36, 108, 465, 68, "#1f4268", "#7fb3eb", "USA 联邦军", `${uStats.min} - ${uStats.max} 人`, `修正均值 ${uStats.avg.toFixed(1)} | 原始申报 ${uStats.rawMin}-${uStats.rawMax}`);
+  drawSummaryBox(ctx, 539, 108, 465, 68, "#4b4f56", "#d1b48c", "CSA 邦联军", `${cStats.min} - ${cStats.max} 人`, `修正均值 ${cStats.avg.toFixed(1)} | 原始申报 ${cStats.rawMin}-${cStats.rawMax}`);
+
+  // 绘制左右双栏表格
+  drawFactionTable(ctx, 36, tableStartY, 465, maxRows, rowHeight, "#1f4268", "USA · 联邦军 (Union)", currentState.usa, uStats);
+  drawFactionTable(ctx, 539, tableStartY, 465, maxRows, rowHeight, "#4b4f56", "CSA · 邦联军 (Confederate)", currentState.csa, cStats);
+
+  // 绘制公开公示区
+  if (notices.length > 0) {
+    const ny = tableStartY + tableHeight + 20;
+    ctx.fillStyle = "rgba(200, 162, 82, 0.12)";
+    ctx.fillRect(36, ny, width - 72, noticeBlockHeight);
+    ctx.strokeStyle = "#c8a252";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(36, ny, width - 72, noticeBlockHeight);
+
+    ctx.fillStyle = "#c8a252";
+    ctx.font = "bold 15px 'Microsoft YaHei', sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("⚖️ 本次联队人数修正公开公示：", 52, ny + 28);
+
+    ctx.fillStyle = "#e6e8ec";
+    ctx.font = "13.5px 'Microsoft YaHei', sans-serif";
+    notices.forEach((line, idx) => {
+      ctx.fillText(`• ${line}`, 54, ny + 54 + idx * 26);
+    });
+  }
+
+  // 底部水印
+  ctx.fillStyle = "#6c7586";
+  ctx.font = "12px 'Microsoft YaHei', sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("War of Rights Team Balancer · 自动平衡与人数修正公示系统", width / 2, height - 24);
+
+  const dataUrl = canvas.toDataURL("image/png");
+  document.getElementById("previewImg").src = dataUrl;
+  document.getElementById("downloadImgLink").href = dataUrl;
+  document.getElementById("imageModal").classList.remove("hidden");
+}
+
+function drawSummaryBox(ctx, x, y, w, h, headerColor, accentColor, title, mainText, subText) {
+  ctx.fillStyle = "#1d222a";
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = headerColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+
+  ctx.fillStyle = headerColor;
+  ctx.fillRect(x, y, 115, h);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 15px 'Microsoft YaHei', sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(title, x + 57, y + 40);
+
+  ctx.fillStyle = accentColor;
+  ctx.font = "bold 22px 'Microsoft YaHei', sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(mainText, x + 132, y + 33);
+
+  ctx.fillStyle = "#9aa3b2";
+  ctx.font = "13px 'Microsoft YaHei', sans-serif";
+  ctx.fillText(subText, x + 132, y + 55);
+}
+
+function drawFactionTable(ctx, x, y, w, maxRows, rowH, headerColor, title, list, stats) {
+  const totalH = 44 + maxRows * rowH + 46;
+  ctx.fillStyle = "#1d222a";
+  ctx.fillRect(x, y, w, totalH);
+  ctx.strokeStyle = "#323a46";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(x, y, w, totalH);
+
+  // 表头
+  ctx.fillStyle = headerColor;
+  ctx.fillRect(x, y, w, 44);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 16px 'Microsoft YaHei', sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(title, x + 16, y + 28);
+
+  ctx.textAlign = "right";
+  ctx.font = "13px 'Microsoft YaHei', sans-serif";
+  ctx.fillText(`共 ${list.length} 支队伍`, x + w - 16, y + 27);
+
+  // 数据行
+  for (let i = 0; i < maxRows; i++) {
+    const ry = y + 44 + i * rowH;
+    if (i % 2 === 1) {
+      ctx.fillStyle = "rgba(255,255,255,0.02)";
+      ctx.fillRect(x, ry, w, rowH);
+    }
+    ctx.strokeStyle = "#2b323d";
+    ctx.beginPath();
+    ctx.moveTo(x, ry + rowH);
+    ctx.lineTo(x + w, ry + rowH);
+    ctx.stroke();
+
+    const t = list[i];
+    if (!t) continue;
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#e6e8ec";
+    ctx.font = "bold 14.5px 'Microsoft YaHei', sans-serif";
+    ctx.fillText(t.name, x + 16, ry + 26);
+
+    const adjStr = t.min === t.max ? `${t.min} 人` : `${t.min}-${t.max} 人`;
+    ctx.textAlign = "right";
+    if (t.isModified) {
+      ctx.fillStyle = "#f0b866";
+      ctx.font = "bold 14px 'Microsoft YaHei', sans-serif";
+      ctx.fillText(`修正 ${adjStr} (原${t.rawMin}-${t.rawMax})`, x + w - 16, ry + 26);
+    } else {
+      ctx.fillStyle = "#cbd2df";
+      ctx.font = "14px 'Microsoft YaHei', sans-serif";
+      ctx.fillText(adjStr, x + w - 16, ry + 26);
+    }
+  }
+
+  // 合计栏
+  const fy = y + 44 + maxRows * rowH;
+  ctx.fillStyle = "#161a20";
+  ctx.fillRect(x, fy, w, 46);
+  ctx.fillStyle = "#c8a252";
+  ctx.font = "bold 14.5px 'Microsoft YaHei', sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("合计修正预估", x + 16, fy + 28);
+
+  ctx.textAlign = "right";
+  ctx.fillText(`${stats.min} - ${stats.max} 人 (均值 ${stats.avg.toFixed(1)})`, x + w - 16, fy + 28);
 }
 
 function escapeHtml(str) {
