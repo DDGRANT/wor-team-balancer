@@ -1,360 +1,278 @@
 // 本地存储 Key 定义（全局唯一声明）
-const STORAGE_KEY_AUTO = "wor_balancer_autosave_v6";
-const STORAGE_KEY_PRESET = "wor_balancer_preset_v6";
-const STORAGE_KEY_LANG = "wor_balancer_lang_v6";
+const STORAGE_KEY_AUTO = "wor_balancer_autosave_v7";
+const STORAGE_KEY_PRESET = "wor_balancer_preset_v7";
+const STORAGE_KEY_LANG = "wor_balancer_lang_v7";
 
-// 多语言字典（简体中文 / English / 日本語）
+// 双语同屏字典：中英双语 (zh_en) / 日英双语 (ja_en)
 const I18N = {
-  zh: {
+  zh_en: {
     htmlLang: "zh-CN",
-    title: "WAR OF RIGHTS · 联队人数平衡器",
-    subtitle: "表格录入 · 虚报/少报修正与公示 · 双端区间配平 · 一键生成排表长图",
-    tabTable: "📊 表格录入模式",
-    tabText: "📝 文本批量粘贴",
-    btnSavePreset: "💾 存为常用名单",
-    btnLoadPreset: "📂 载入常用名单",
-    btnExportJson: "⬇️ 导出 JSON 备份",
-    btnImportJson: "⬆️ 导入 JSON",
-    thRegiment: "兵团番号 / 队伍名称",
-    thMin: "申报下限",
-    thMax: "申报上限",
-    thAdjusted: "修正后预估 (自动)",
-    thLock: "阵营锁定",
-    thAction: "操作",
-    btnAddRow: "+ 添加一行兵团",
-    hintTable: "提示：若下方“修正档案”中包含该团，系统会自动计算修正后预估人数并参与平衡",
-    labelRosterInput: "批量粘贴报名文本（每行一个，自动同步至表格）：",
-    hintTextFormat: "支持格式：<code>[18thVA]15-20</code>、<code>[HD] 25~30 USA</code>、<code>散人 10</code>",
-    btnParseToTable: "📥 解析并同步到表格",
-    hintParseSync: "解析后会自动切换回表格模式供你微调",
-    labelMode: "优先配平策略：",
-    optBalanced: "综合平衡（同时兼顾下限、上限与预期均值）",
-    optMin: "保底优先（优先对齐最低出勤下限）",
-    optMax: "峰值优先（优先对齐最高出勤上限）",
-    btnSample: "填入示例(含修正)",
-    btnClear: "清空报名表",
-    btnBalance: "⚔️ 开始自动平衡",
-    auditTitle: "⚖️ 兵团虚报 / 少报人数修正档案（公开公示 · 自动记忆）",
-    auditFormula: "公式：<strong>修正后人数 = round(申报人数 × 系数 + 增减值)</strong>。例如虚报 20% 可填系数 <code>0.80</code>；常多报 3 人可填增减 <code>-3</code>；少报多来则填 <code>1.15</code> 或 <code>+3</code>。",
-    btnAddAudit: "+ 新增修正规则",
-    thAuditTag: "兵团番号 (自动忽略方括号)",
-    thAuditFactor: "人数系数 (默认1.0)",
-    thAuditDelta: "固定增减 (如 -3 / +2)",
-    thAuditReason: "公开公示说明 / 历史出勤依据",
-    usaBadge: "USA 联邦军",
-    csaBadge: "CSA 邦联军",
-    diffTitle: "双方修正后人数差值",
+    title: "WAR OF RIGHTS · 联队人数平衡器 Team Balancer",
+    subtitle: "表格录入 · 虚报/少报修正与公示 · 分级区间配平 · 一键生成双语战报长图 | Table Entry · Audit Disclosure · Bracket Balance",
+    tabTable: "📊 表格录入 Table Entry",
+    tabText: "📝 文本批量粘贴 Bulk Paste",
+    btnSavePreset: "💾 存为常用 Save Preset",
+    btnLoadPreset: "📂 载入常用 Load Preset",
+    btnExportJson: "⬇️ 导出 Export JSON",
+    btnImportJson: "⬆️ 导入 Import JSON",
+    thRegiment: "兵团番号 Regiment Tag",
+    thMin: "申报下限 Min",
+    thMax: "申报上限 Max",
+    thAdjusted: "修正预估 & 分级 Adj & Bracket",
+    thLock: "阵营锁定 Faction Lock",
+    thAction: "操作 Action",
+    btnAddRow: "+ 添加一行 Add Row",
+    hintTable: "提示：下方“修正档案”中的兵团会自动折算并划分大/中/小型分级 | Tip: Regiments in Audit table are auto-adjusted & bracketed",
+    labelRosterInput: "批量粘贴报名文本（每行一个，自动同步至表格 Paste Roster）：",
+    hintTextFormat: "支持格式 Formats：<code>[18thVA]15-20</code>、<code>[HD] 25~30 USA</code>、<code>散人 Pubs 10</code>",
+    btnParseToTable: "📥 解析并同步到表格 Parse & Sync",
+    hintParseSync: "解析后自动切换回表格模式微调 | Auto-switches back to Table Entry",
+    strategySectionTitle: "⚖️ 配平策略 Draw / Balance Mode",
+    bracketRuleDesc: "分级规则：中位数>26=大型(2槽) >16=中型(1槽) 其余=小型(1槽) | Bracket: mid>26=Large(2), >16=Medium(1), else=Small(1)",
+    modePureTitle: "纯平衡 Pure Balance",
+    modePureDesc: "只根据人数上限和中位数平衡，不考虑战队分级 Balance by max & mid only, no brackets",
+    modeBracketTitle: "分级平衡 Bracket Balance",
+    modeBracketDesc: "先平衡人数，再平衡各级战队数，两队数量差<=2 Balance brackets, team count diff <=2",
+    modeSmallCompTitle: "小战队补偿 Small Team Comp",
+    modeSmallCompDesc: "先选出小型战队作为种子，其余分级平衡后补入 Seed small team, then bracket balance",
+    btnSample: "填入示例 Sample",
+    btnClear: "清空报名表 Clear",
+    btnBalance: "⚔️ 开始自动平衡 Auto Balance",
+    auditTitle: "⚖️ 兵团虚报 / 少报人数修正档案 Audit & Public Disclosure（公开公示 · 自动记忆）",
+    auditFormula: "公式 Formula：<strong>修正后人数 Adjusted = round(申报 Reported × 系数 Factor + 增减 Offset)</strong>。例如虚报 20% 填 <code>0.80</code>；多报 3 人填 <code>-3</code>。",
+    btnAddAudit: "+ 新增规则 Add Rule",
+    thAuditTag: "兵团番号 Regiment Tag",
+    thAuditFactor: "人数系数 Factor",
+    thAuditDelta: "固定增减 Offset",
+    thAuditReason: "公开公示说明 Public Reason",
+    usaBadge: "USA 联邦军 Union",
+    csaBadge: "CSA 邦联军 Confederate",
+    diffTitle: "双方修正后人数差值 Headcount Diff",
     usaHeader: "USA · 联邦军 (Union)",
     csaHeader: "CSA · 邦联军 (Confederate)",
-    resThRegiment: "兵团番号",
-    resThRaw: "申报人数",
-    resThAdj: "修正预估",
-    resThStatus: "状态",
-    tfootTotal: "合计",
-    publicNoticeTitle: "📢 本次联队人数修正公开公示",
-    btnGenImg: "🖼️ 生成对战排表图片 (PNG)",
-    btnCopyText: "📋 一键复制群公告文本(含公示)",
-    modalTitle: "对战排表长图预览（可直接右键复制或点击下载发群）",
-    btnCloseModal: "关闭 ✕",
-    btnDownloadImg: "⬇️ 下载 PNG 图片",
-    unitPerson: "人",
-    teamCount: (n) => `${n} 支队伍`,
-    adjModifiedTag: (min, max) => `${min} - ${max} 人 (已修正)`,
-    adjNormalTag: (min, max) => `${min} - ${max} 人`,
-    lockAuto: "自动分配",
-    lockUSA: "锁定 USA 联邦",
-    lockCSA: "锁定 CSA 邦联",
-    btnDelete: "删除",
-    phRegiment: "如 [18thVA] 或 散人",
+    resThRegiment: "兵团 Regiment",
+    resThRaw: "申报 Raw",
+    resThAdj: "修正 Adj",
+    resThBracket: "分级 Bracket",
+    resThStatus: "状态 Status",
+    tfootTotal: "合计 Total",
+    publicNoticeTitle: "📢 本次联队人数修正公开公示 Public Headcount Adjustment Disclosure",
+    btnGenImg: "🖼️ 生成双语排表长图 Generate PNG",
+    btnCopyText: "📋 复制双语群公告 Copy Roster Text",
+    modalTitle: "对战排表长图预览 Preview（右键复制或点击下载 Download）",
+    btnCloseModal: "关闭 Close ✕",
+    btnDownloadImg: "⬇️ 下载 Download PNG",
+    // 动态文本
+    activeModeLabel: (name) => `当前策略 Active Mode：${name}`,
+    teamCount: (n) => `${n} 队 Teams`,
+    bracketLarge: "大型 Large(2)",
+    bracketMedium: "中型 Medium(1)",
+    bracketSmall: "小型 Small(1)",
+    bracketShortL: "大L(2)",
+    bracketShortM: "中M(1)",
+    bracketShortS: "小S(1)",
+    slotCount: (s) => `${s} 槽 Slots`,
+    lockAuto: "自动分配 Auto",
+    lockUSA: "锁定 USA Lock",
+    lockCSA: "锁定 CSA Lock",
+    btnDelete: "删除 Del",
+    phRegiment: "如 [18thVA] 或 散人 Pubs",
     phAuditTag: "如 [18thVA] 或 18thVA",
-    phAuditReason: "填写公示依据，如：近期出勤率约80%",
-    emptyAuditRow: "暂无虚报/少报修正记录（所有兵团均按 100% 申报人数计算）",
-    emptyResultRow: "暂无队伍分配至此阵营",
-    statusLocked: (f) => `锁定 ${f}`,
-    statusModified: "已修正",
-    statusAuto: "自动分配",
-    btnSwapTo: (f) => `转至 ${f} ⇄`,
-    footAdjSummary: (min, max, avg) => `${min} - ${max} 人 (均值 ${avg})`,
-    summarySub: (avg, rMin, rMax) => `修正均值：${avg} 人 | 原始申报：${rMin}-${rMax} 人`,
-    diffSubText: (minD, maxD) => `下限差 ${minD} 人 | 上限差 ${maxD} 人`,
-    avgDiffText: (avgD) => `修正均值差：${avgD} 人`,
-    saveEnabled: "● 已启用自动本地记忆",
-    saveAutoDone: "● 已自动保存至本地",
-    saveRestored: "● 已恢复上次的本地记忆数据",
-    savePresetDone: "✔ 已保存为常用名单模板！",
-    loadPresetDone: "✔ 已载入常用名单！",
-    exportJsonDone: "✔ 已导出 JSON 配置文件！",
-    importJsonDone: "✔ JSON 配置导入成功！",
-    copyDone: "✔ 已复制到剪贴板，可直接粘贴发送！",
-    warnHeader: "以下行格式未能识别（已跳过）：",
-    warnLine: (lineNo, txt) => `第 ${lineNo} 行无法识别人数: "${txt}"`,
+    phAuditReason: "公示依据 Basis，如：近期出勤约80% / ~80% turnout",
+    emptyAuditRow: "暂无虚报/少报修正记录（所有兵团按 100% 计算）| No audit rules configured",
+    emptyResultRow: "暂无队伍分配至此阵营 | No regiments assigned",
+    statusLocked: (f) => `锁定 Lock ${f}`,
+    statusModified: "已修正 Adj",
+    statusSeed: "种子 Seed",
+    statusAuto: "自动 Auto",
+    btnSwapTo: (f) => `转 ${f} ⇄`,
+    footAdjSummary: (min, max, avg) => `${min}-${max} (均值Avg ${avg})`,
+    summarySub: (avg, rMin, rMax) => `修正均值 Avg：${avg} | 原始申报 Raw：${rMin}-${rMax}`,
+    bracketBreakdown: (l, m, s, slots) => `分级 Brackets：大L×${l} 中M×${m} 小S×${s} (${slots}槽Slots)`,
+    diffSubText: (minD, maxD) => `下限差 MinDiff ${minD} | 上限差 MaxDiff ${maxD}`,
+    avgDiffText: (avgD) => `中位均值差 MidDiff：${avgD}`,
+    teamDiffText: (tDiff, sDiff) => `队数差 TeamDiff：${tDiff} | 槽位差 SlotDiff：${sDiff}`,
+    saveEnabled: "● 已启用自动本地记忆 Auto-Save Active",
+    saveAutoDone: "● 已自动保存至本地 Auto-Saved",
+    saveRestored: "● 已恢复上次本地记忆 Restored",
+    savePresetDone: "✔ 已保存为常用名单！Preset Saved!",
+    loadPresetDone: "✔ 已载入常用名单！Preset Loaded!",
+    exportJsonDone: "✔ 已导出 JSON 备份！JSON Exported!",
+    importJsonDone: "✔ JSON 导入成功！JSON Imported!",
+    copyDone: "✔ 已复制双语战报到剪贴板！Copied!",
+    warnHeader: "以下行格式未能识别（已跳过）Unrecognized lines:",
+    warnLine: (lineNo, txt) => `第 ${lineNo} 行无法识别 Line ${lineNo}: "${txt}"`,
     unnamedTeam: (n) => `未命名队伍#${n}`,
-    alertNoSaveData: "当前表格没有可保存的有效兵团数据！",
-    alertNoPreset: "尚未保存过常用名单模板！请先录入兵团后点击“存为常用名单”。",
-    alertReadPresetFail: "读取常用名单失败。",
-    alertInvalidJson: "JSON 文件格式不正确，导入失败。",
-    alertNoExportData: "当前没有可导出的排表数据！",
-    alertNoImgData: "当前没有可生成图片的排表数据，请先点击“开始自动平衡”！",
+    alertNoSaveData: "当前没有可保存的有效兵团数据！No valid rows to save!",
+    alertNoPreset: "尚未保存过常用名单！No preset saved yet!",
+    alertReadPresetFail: "读取常用名单失败。Failed to load preset.",
+    alertInvalidJson: "JSON 文件格式不正确。Invalid JSON file.",
+    alertNoExportData: "当前没有可导出的排表数据！No data to export!",
+    alertNoImgData: "当前没有可生成图片的排表数据！No data to render!",
     noticeItem: (item, r, formulaStr) => {
-      const reasonStr = r.reason ? `（依据：${r.reason}）` : "";
-      return `${item.name}：申报 ${item.rawMin}-${item.rawMax}人 → 修正为 ${item.min}-${item.max}人 [${formulaStr}]${reasonStr}`;
+      const reasonStr = r.reason ? `（依据 Basis：${r.reason}）` : "";
+      return `${item.name}：申报 Raw ${item.rawMin}-${item.rawMax} → 修正 Adj ${item.min}-${item.max} [${formulaStr}]${reasonStr}`;
     },
-    factorLabel: (f) => `系数 ×${f}`,
-    deltaLabel: (d) => `增减 ${d > 0 ? "+" + d : d}人`,
-    exportTitle: "【War of Rights 联队阵营分配表】",
-    exportUSA: (min, max, avg) => `🔵 USA 联邦军 [修正预估 ${min}-${max} 人 | 均值 ${avg}]：`,
-    exportCSA: (min, max, avg) => `⚪ CSA 邦联军 [修正预估 ${min}-${max} 人 | 均值 ${avg}]：`,
-    exportLineMod: (name, adj, rMin, rMax) => `• ${name}：修正 ${adj}（原报 ${rMin}-${rMax}人）`,
-    exportLineNorm: (name, adj) => `• ${name}：${adj}`,
-    exportDiff: (minD, maxD) => `📊 双方修正后人数差：下限差 ${minD} 人 / 上限差 ${maxD} 人`,
-    exportNoticeHeader: "⚖️ 【人数修正公开公示】：",
-    imgTitle: "WAR OF RIGHTS · 联队阵营人数平衡排表",
-    imgSubtitle: (timeStr, minD, maxD) => `生成时间：${timeStr}   |   双方修正后人数差：下限差 ${minD} 人 / 上限差 ${maxD} 人`,
+    factorLabel: (f) => `系数Factor ×${f}`,
+    deltaLabel: (d) => `增减Offset ${d > 0 ? "+" + d : d}`,
+    exportTitle: "【War of Rights 联队阵营分配表 Event Faction Roster】",
+    exportModeLine: (modeName) => `⚖️ 配平策略 Balance Mode：${modeName}`,
+    exportUSA: (min, max, avg, l, m, s) => `🔵 USA 联邦军 Union [修正预估 ${min}-${max} | 均值Avg ${avg} | 大L:${l} 中M:${m} 小S:${s}]：`,
+    exportCSA: (min, max, avg, l, m, s) => `⚪ CSA 邦联军 Confederate [修正预估 ${min}-${max} | 均值Avg ${avg} | 大L:${l} 中M:${m} 小S:${s}]：`,
+    exportLineMod: (name, adj, rMin, rMax, bTag) => `• ${name} [${bTag}]：修正Adj ${adj}（原报Raw ${rMin}-${rMax}）`,
+    exportLineNorm: (name, adj, bTag) => `• ${name} [${bTag}]：${adj}`,
+    exportDiff: (minD, maxD, tDiff) => `📊 双方修正差 Diff：下限差Min ${minD} / 上限差Max ${maxD} / 队数差Teams ${tDiff}`,
+    exportNoticeHeader: "⚖️ 【人数修正公开公示 Public Adjustment Disclosure】：",
+    imgTitle: "WAR OF RIGHTS · 联队阵营人数平衡排表 EVENT ROSTER",
+    imgSubtitle: (timeStr, modeName, minD, maxD, tDiff) => `${timeStr}  |  ${modeName}  |  下限差Min:${minD} 上限差Max:${maxD} 队数差Teams:${tDiff}`,
     imgUSATitle: "USA 联邦军",
     imgCSATitle: "CSA 邦联军",
-    imgCardSub: (avg, rMin, rMax) => `修正均值 ${avg} | 原始申报 ${rMin}-${rMax}`,
-    imgTableTeams: (n) => `共 ${n} 支队伍`,
-    imgRowMod: (adjStr, rMin, rMax) => `修正 ${adjStr} (原${rMin}-${rMax})`,
-    imgFootLabel: "合计修正预估",
-    imgNoticeTitle: "⚖️ 本次联队人数修正公开公示：",
-    imgFooter: "War of Rights Team Balancer · 自动平衡与人数修正公示系统"
+    imgCardSub: (avg, rMin, rMax) => `均值Avg ${avg} | 原报Raw ${rMin}-${rMax}`,
+    imgTableTeams: (n, l, m, s) => `${n}队 (L:${l} M:${m} S:${s})`,
+    imgRowMod: (adjStr, rMin, rMax, bShort) => `[${bShort}] 修正${adjStr} (原${rMin}-${rMax})`,
+    imgRowNorm: (adjStr, bShort) => `[${bShort}] ${adjStr}`,
+    imgFootLabel: "合计 Total",
+    imgNoticeTitle: "⚖️ 本次联队人数修正公开公示 Public Adjustment Disclosure：",
+    imgFooter: "War of Rights Team Balancer · 双语智能平衡与人数修正公示系统"
   },
-  en: {
-    htmlLang: "en",
-    title: "WAR OF RIGHTS · REGIMENT TEAM BALANCER",
-    subtitle: "Table Entry · Attendance Adjustment & Public Audit · Interval Balancing · PNG Roster Export",
-    tabTable: "📊 Table Entry",
-    tabText: "📝 Bulk Text Paste",
-    btnSavePreset: "💾 Save Preset",
-    btnLoadPreset: "📂 Load Preset",
-    btnExportJson: "⬇️ Export JSON",
-    btnImportJson: "⬆️ Import JSON",
-    thRegiment: "Regiment Tag / Name",
-    thMin: "Reported Min",
-    thMax: "Reported Max",
-    thAdjusted: "Adjusted Est. (Auto)",
-    thLock: "Faction Lock",
-    thAction: "Action",
-    btnAddRow: "+ Add Regiment Row",
-    hintTable: "Tip: Regiments listed in the Adjustment Audit table below will be auto-adjusted before balancing.",
-    labelRosterInput: "Paste bulk roster text (one per line, auto-syncs to table):",
-    hintTextFormat: "Formats: <code>[18thVA]15-20</code>, <code>[HD] 25~30 USA</code>, <code>Pubs 10</code>",
-    btnParseToTable: "📥 Parse & Sync to Table",
-    hintParseSync: "Automatically switches back to Table Entry for fine-tuning",
-    labelMode: "Balancing Priority:",
-    optBalanced: "Balanced (Min, Max & Expected Average)",
-    optMin: "Minimum Floor Priority (Align Minimum Headcount)",
-    optMax: "Maximum Ceiling Priority (Align Maximum Headcount)",
-    btnSample: "Load Sample",
-    btnClear: "Clear Roster",
-    btnBalance: "⚔️ Auto Balance",
-    auditTitle: "⚖️ Regiment Over/Under-Reporting Audit & Public Disclosure (Auto-Saved)",
-    auditFormula: "Formula: <strong>Adjusted = round(Reported × Factor + Offset)</strong>. E.g., 20% over-report → Factor <code>0.80</code>; usually -3 players → Offset <code>-3</code>; under-report → <code>1.15</code> or <code>+3</code>.",
-    btnAddAudit: "+ Add Audit Rule",
-    thAuditTag: "Regiment Tag (Brackets ignored)",
-    thAuditFactor: "Multiplier (Default 1.0)",
-    thAuditDelta: "Fixed Offset (e.g. -3 / +2)",
-    thAuditReason: "Public Disclosure Note / Attendance Basis",
-    usaBadge: "USA UNION",
-    csaBadge: "CSA CONFEDERATE",
-    diffTitle: "Adjusted Headcount Difference",
-    usaHeader: "USA · Union Forces",
-    csaHeader: "CSA · Confederate Forces",
-    resThRegiment: "Regiment",
-    resThRaw: "Reported",
-    resThAdj: "Adjusted",
-    resThStatus: "Status",
-    tfootTotal: "Total",
-    publicNoticeTitle: "📢 Public Disclosure of Headcount Adjustments",
-    btnGenImg: "🖼️ Generate Roster Image (PNG)",
-    btnCopyText: "📋 Copy Discord/Chat Announcement",
-    modalTitle: "Roster Image Preview (Right-click to copy or click Download)",
-    btnCloseModal: "Close ✕",
-    btnDownloadImg: "⬇️ Download PNG",
-    unitPerson: "",
-    teamCount: (n) => `${n} Team${n === 1 ? "" : "s"}`,
-    adjModifiedTag: (min, max) => `${min} - ${max} (Adjusted)`,
-    adjNormalTag: (min, max) => `${min} - ${max}`,
-    lockAuto: "Auto Assign",
-    lockUSA: "Lock USA",
-    lockCSA: "Lock CSA",
-    btnDelete: "Delete",
-    phRegiment: "e.g. [18thVA] or Pubs",
-    phAuditTag: "e.g. [18thVA] or 18thVA",
-    phAuditReason: "Public reason, e.g. ~80% recent turnout",
-    emptyAuditRow: "No adjustment rules configured (all regiments calculated at 100% reported strength).",
-    emptyResultRow: "No regiments assigned to this faction",
-    statusLocked: (f) => `Locked ${f}`,
-    statusModified: "Adjusted",
-    statusAuto: "Auto",
-    btnSwapTo: (f) => `Move to ${f} ⇄`,
-    footAdjSummary: (min, max, avg) => `${min} - ${max} (Avg ${avg})`,
-    summarySub: (avg, rMin, rMax) => `Adjusted Avg: ${avg} | Reported: ${rMin}-${rMax}`,
-    diffSubText: (minD, maxD) => `Min Diff: ${minD} | Max Diff: ${maxD}`,
-    avgDiffText: (avgD) => `Adjusted Avg Diff: ${avgD}`,
-    saveEnabled: "● Local Auto-Save Active",
-    saveAutoDone: "● Auto-saved locally",
-    saveRestored: "● Restored previous session data",
-    savePresetDone: "✔ Saved as Preset Roster!",
-    loadPresetDone: "✔ Preset Roster loaded!",
-    exportJsonDone: "✔ JSON backup exported!",
-    importJsonDone: "✔ JSON backup imported!",
-    copyDone: "✔ Copied to clipboard!",
-    warnHeader: "Unrecognized lines (skipped):",
-    warnLine: (lineNo, txt) => `Line ${lineNo} invalid headcount: "${txt}"`,
-    unnamedTeam: (n) => `Unnamed#${n}`,
-    alertNoSaveData: "No valid regiment rows to save!",
-    alertNoPreset: "No preset saved yet! Enter regiments and click 'Save Preset' first.",
-    alertReadPresetFail: "Failed to load preset.",
-    alertInvalidJson: "Invalid JSON file format.",
-    alertNoExportData: "No balanced roster data to export!",
-    alertNoImgData: "No roster data available. Click 'Auto Balance' first!",
-    noticeItem: (item, r, formulaStr) => {
-      const reasonStr = r.reason ? ` (Basis: ${r.reason})` : "";
-      return `${item.name}: Reported ${item.rawMin}-${item.rawMax} → Adjusted ${item.min}-${item.max} [${formulaStr}]${reasonStr}`;
-    },
-    factorLabel: (f) => `Factor ×${f}`,
-    deltaLabel: (d) => `Offset ${d > 0 ? "+" + d : d}`,
-    exportTitle: "[War of Rights Event Faction Roster]",
-    exportUSA: (min, max, avg) => `🔵 USA Union [Est. ${min}-${max} | Avg ${avg}]:`,
-    exportCSA: (min, max, avg) => `⚪ CSA Confederate [Est. ${min}-${max} | Avg ${avg}]:`,
-    exportLineMod: (name, adj, rMin, rMax) => `• ${name}: Adj ${adj} (Reported ${rMin}-${rMax})`,
-    exportLineNorm: (name, adj) => `• ${name}: ${adj}`,
-    exportDiff: (minD, maxD) => `📊 Adjusted Diff: Min Diff ${minD} / Max Diff ${maxD}`,
-    exportNoticeHeader: "⚖️ [Public Headcount Adjustment Disclosure]:",
-    imgTitle: "WAR OF RIGHTS · EVENT FACTION ROSTER",
-    imgSubtitle: (timeStr, minD, maxD) => `Generated: ${timeStr}   |   Adjusted Diff: Min ${minD} / Max ${maxD}`,
-    imgUSATitle: "USA UNION",
-    imgCSATitle: "CSA CONFEDERATE",
-    imgCardSub: (avg, rMin, rMax) => `Adj Avg ${avg} | Reported ${rMin}-${rMax}`,
-    imgTableTeams: (n) => `${n} Regiment${n === 1 ? "" : "s"}`,
-    imgRowMod: (adjStr, rMin, rMax) => `Adj ${adjStr} (Raw ${rMin}-${rMax})`,
-    imgFootLabel: "Total Adjusted Est.",
-    imgNoticeTitle: "⚖️ Public Disclosure of Headcount Adjustments:",
-    imgFooter: "War of Rights Team Balancer · Automated Balancing & Public Audit System"
-  },
-  ja: {
+  ja_en: {
     htmlLang: "ja",
-    title: "WAR OF RIGHTS · 連隊人数バランサー",
-    subtitle: "テーブル入力 · 申告人数補正と公開公示 · 範囲人数バランス調整 · 画像出力",
-    tabTable: "📊 テーブル入力",
-    tabText: "📝 テキスト一括貼付",
-    btnSavePreset: "💾 定番リスト保存",
-    btnLoadPreset: "📂 定番リスト読込",
-    btnExportJson: "⬇️ JSON出力",
-    btnImportJson: "⬆️ JSON読込",
-    thRegiment: "連隊タグ / チーム名",
-    thMin: "申告下限",
-    thMax: "申告上限",
-    thAdjusted: "補正後予測 (自動)",
-    thLock: "陣営固定",
-    thAction: "操作",
-    btnAddRow: "+ 連隊行を追加",
-    hintTable: "ヒント：下の「人数補正アーカイブ」に登録された連隊は自動的に補正後の人数で計算されます",
-    labelRosterInput: "参加リストを一括貼り付け（1行に1連隊、自動でテーブルに同期）：",
-    hintTextFormat: "対応形式：<code>[18thVA]15-20</code>、<code>[HD] 25~30 USA</code>、<code>野良 10</code>",
-    btnParseToTable: "📥 解析してテーブルへ同期",
-    hintParseSync: "解析後、微調整のため自動的にテーブル入力モードへ切り替わります",
-    labelMode: "バランス優先方針：",
-    optBalanced: "総合バランス（下限・上限・平均値を均等に調整）",
-    optMin: "最低保証優先（最低参加人数の下限を優先して揃える）",
-    optMax: "最大値優先（最大参加人数の上限を優先して揃える）",
-    btnSample: "サンプル入力",
-    btnClear: "リスト消去",
-    btnBalance: "⚔️ 自動バランス実行",
-    auditTitle: "⚖️ 連隊の過大・過少申告 補正アーカイブ（公開公示 · 自動保存）",
-    auditFormula: "計算式：<strong>補正後人数 = round(申告人数 × 係数 + 増減値)</strong>。例：20%過大申告は係数 <code>0.80</code>、常時3名減は <code>-3</code>、過少申告は <code>1.15</code> や <code>+3</code> を入力。",
-    btnAddAudit: "+ 補正ルール追加",
-    thAuditTag: "連隊タグ (括弧は自動無視)",
-    thAuditFactor: "人数係数 (初期値1.0)",
-    thAuditDelta: "固定増減 (例 -3 / +2)",
-    thAuditReason: "公開公示理由 / 過去の出席率根拠",
-    usaBadge: "USA 北軍",
-    csaBadge: "CSA 南軍",
-    diffTitle: "両軍の補正後人数差",
+    title: "WAR OF RIGHTS · 連隊人数バランサー Team Balancer",
+    subtitle: "テーブル入力 · 申告人数補正と公開公示 · 規模階級バランス · 日英編成表画像出力 | Table · Audit · Bracket Balance",
+    tabTable: "📊 テーブル入力 Table Entry",
+    tabText: "📝 テキスト一括貼付 Bulk Paste",
+    btnSavePreset: "💾 定番保存 Save Preset",
+    btnLoadPreset: "📂 定番読込 Load Preset",
+    btnExportJson: "⬇️ 出力 Export JSON",
+    btnImportJson: "⬆️ 読込 Import JSON",
+    thRegiment: "連隊タグ Regiment Tag",
+    thMin: "申告下限 Min",
+    thMax: "申告上限 Max",
+    thAdjusted: "補正予測 & 階級 Adj & Bracket",
+    thLock: "陣営固定 Faction Lock",
+    thAction: "操作 Action",
+    btnAddRow: "+ 行を追加 Add Row",
+    hintTable: "ヒント：「人数補正アーカイブ」登録連隊は自動補正＆大/中/小規模に分類されます | Tip: Regiments in Audit table are auto-adjusted",
+    labelRosterInput: "参加リスト一括貼付（1行1連隊・自動同期 Paste Roster）：",
+    hintTextFormat: "対応形式 Formats：<code>[18thVA]15-20</code>、<code>[HD] 25~30 USA</code>、<code>野良 Pubs 10</code>",
+    btnParseToTable: "📥 解析してテーブルへ同期 Parse & Sync",
+    hintParseSync: "解析後にテーブル入力モードへ自動切替 | Auto-switches back to Table Entry",
+    strategySectionTitle: "⚖️ バランス方式 Draw / Balance Mode",
+    bracketRuleDesc: "階級規則：中央値>26=大型(2枠) >16=中型(1枠) 他=小型(1枠) | Bracket: mid>26=Large(2), >16=Medium(1), else=Small(1)",
+    modePureTitle: "純バランス Pure Balance",
+    modePureDesc: "人数上限と中央値のみでバランス調整（連隊規模を考慮しない）Balance by max & mid only, no brackets",
+    modeBracketTitle: "階級バランス Bracket Balance",
+    modeBracketDesc: "人数を揃えた後、各規模の連隊数を均等化（連隊数差<=2）Balance brackets, team count diff <=2",
+    modeSmallCompTitle: "小連隊補償 Small Team Comp",
+    modeSmallCompDesc: "小型連隊をシードとして先に確保し、他を階級バランス後に補充 Seed small team, then bracket balance",
+    btnSample: "サンプル Sample",
+    btnClear: "消去 Clear",
+    btnBalance: "⚔️ 自動バランス実行 Auto Balance",
+    auditTitle: "⚖️ 連隊の過大・過少申告 補正アーカイブ Audit & Public Disclosure（公開公示 · 自動保存）",
+    auditFormula: "計算式 Formula：<strong>補正後人数 Adjusted = round(申告 Reported × 係数 Factor + 増減 Offset)</strong>。例：20%過大は <code>0.80</code>、3名減は <code>-3</code>。",
+    btnAddAudit: "+ ルール追加 Add Rule",
+    thAuditTag: "連隊タグ Regiment Tag",
+    thAuditFactor: "人数係数 Factor",
+    thAuditDelta: "固定増减 Offset",
+    thAuditReason: "公開公示根拠 Public Reason",
+    usaBadge: "USA 北軍 Union",
+    csaBadge: "CSA 南軍 Confederate",
+    diffTitle: "両軍の補正後人数差 Headcount Diff",
     usaHeader: "USA · 北軍 (Union)",
     csaHeader: "CSA · 南軍 (Confederate)",
-    resThRegiment: "連隊タグ",
-    resThRaw: "申告人数",
-    resThAdj: "補正予測",
-    resThStatus: "状態",
-    tfootTotal: "合計",
-    publicNoticeTitle: "📢 本イベントの人数補正に関する公開公示",
-    btnGenImg: "🖼️ 編成表画像を生成 (PNG)",
-    btnCopyText: "📋 告知用テキストをコピー(公示付)",
-    modalTitle: "編成表プレビュー（右クリックでコピー、またはPNGダウンロード）",
-    btnCloseModal: "閉じる ✕",
-    btnDownloadImg: "⬇️ PNG画像を保存",
-    unitPerson: "名",
-    teamCount: (n) => `${n} 連隊`,
-    adjModifiedTag: (min, max) => `${min} - ${max} 名 (補正済)`,
-    adjNormalTag: (min, max) => `${min} - ${max} 名`,
-    lockAuto: "自動振分",
-    lockUSA: "USA 北軍固定",
-    lockCSA: "CSA 南軍固定",
-    btnDelete: "削除",
-    phRegiment: "例: [18thVA] または 野良",
-    phAuditTag: "例: [18thVA] または 18thVA",
-    phAuditReason: "公示根拠を入力（例：直近出席率約80%）",
-    emptyAuditRow: "人数補正ルールはありません（全連隊が申告通り100%で計算されます）",
-    emptyResultRow: "この陣営に割り当てられた連隊はありません",
-    statusLocked: (f) => `${f} 固定`,
-    statusModified: "補正済",
-    statusAuto: "自動",
-    btnSwapTo: (f) => `${f} へ移動 ⇄`,
-    footAdjSummary: (min, max, avg) => `${min} - ${max} 名 (平均 ${avg})`,
-    summarySub: (avg, rMin, rMax) => `補正平均：${avg} 名 | 元申告：${rMin}-${rMax} 名`,
-    diffSubText: (minD, maxD) => `下限差 ${minD} 名 | 上限差 ${maxD} 名`,
-    avgDiffText: (avgD) => `補正平均差：${avgD} 名`,
-    saveEnabled: "● ローカル自動保存 有効",
-    saveAutoDone: "● ローカルに自動保存しました",
-    saveRestored: "● 前回のデータを復元しました",
-    savePresetDone: "✔ 定番リストとして保存しました！",
-    loadPresetDone: "✔ 定番リストを読み込みました！",
-    exportJsonDone: "✔ JSONバックアップを出力しました！",
-    importJsonDone: "✔ JSONデータをインポートしました！",
-    copyDone: "✔ クリップボードにコピーしました！",
-    warnHeader: "認識できなかった行（スキップされました）：",
-    warnLine: (lineNo, txt) => `${lineNo} 行目の人数を認識できません: "${txt}"`,
+    resThRegiment: "連隊 Regiment",
+    resThRaw: "申告 Raw",
+    resThAdj: "補正 Adj",
+    resThBracket: "階級 Bracket",
+    resThStatus: "状態 Status",
+    tfootTotal: "合計 Total",
+    publicNoticeTitle: "📢 本イベントの人数補正に関する公開公示 Public Headcount Adjustment Disclosure",
+    btnGenImg: "🖼️ 日英編成表画像を生成 Generate PNG",
+    btnCopyText: "📋 日英告知テキストをコピー Copy Roster Text",
+    modalTitle: "編成表画像プレビュー Preview（右クリックでコピー、または保存 Download）",
+    btnCloseModal: "閉じる Close ✕",
+    btnDownloadImg: "⬇️ 保存 Download PNG",
+    // 动态文本
+    activeModeLabel: (name) => `現在の方式 Active Mode：${name}`,
+    teamCount: (n) => `${n} 連隊 Teams`,
+    bracketLarge: "大型 Large(2)",
+    bracketMedium: "中型 Medium(1)",
+    bracketSmall: "小型 Small(1)",
+    bracketShortL: "大L(2)",
+    bracketShortM: "中M(1)",
+    bracketShortS: "小S(1)",
+    slotCount: (s) => `${s} 枠 Slots`,
+    lockAuto: "自動振分 Auto",
+    lockUSA: "USA 固定 Lock",
+    lockCSA: "CSA 固定 Lock",
+    btnDelete: "削除 Del",
+    phRegiment: "例: [18thVA] / 野良 Pubs",
+    phAuditTag: "例: [18thVA] / 18thVA",
+    phAuditReason: "公示根拠 Basis（例：直近出席率約80% / ~80% turnout）",
+    emptyAuditRow: "人数補正ルールはありません（全連隊100%計算）| No audit rules configured",
+    emptyResultRow: "この陣営に割り当てられた連隊はありません | No regiments assigned",
+    statusLocked: (f) => `${f} 固定 Lock`,
+    statusModified: "補正済 Adj",
+    statusSeed: "シード Seed",
+    statusAuto: "自動 Auto",
+    btnSwapTo: (f) => `${f} へ ⇄`,
+    footAdjSummary: (min, max, avg) => `${min}-${max} (平均Avg ${avg})`,
+    summarySub: (avg, rMin, rMax) => `補正平均 Avg：${avg} | 元申告 Raw：${rMin}-${rMax}`,
+    bracketBreakdown: (l, m, s, slots) => `階級 Brackets：大L×${l} 中M×${m} 小S×${s} (${slots}枠Slots)`,
+    diffSubText: (minD, maxD) => `下限差 MinDiff ${minD} | 上限差 MaxDiff ${maxD}`,
+    avgDiffText: (avgD) => `中央平均差 MidDiff：${avgD}`,
+    teamDiffText: (tDiff, sDiff) => `連隊数差 TeamDiff：${tDiff} | 枠数差 SlotDiff：${sDiff}`,
+    saveEnabled: "● ローカル自動保存 有効 Auto-Save Active",
+    saveAutoDone: "● 自動保存完了 Auto-Saved",
+    saveRestored: "● 前回データを復元 Restored",
+    savePresetDone: "✔ 定番リスト保存完了！Preset Saved!",
+    loadPresetDone: "✔ 定番リスト読込完了！Preset Loaded!",
+    exportJsonDone: "✔ JSON出力完了！JSON Exported!",
+    importJsonDone: "✔ JSON読込完了！JSON Imported!",
+    copyDone: "✔ 日英告知テキストをコピーしました！Copied!",
+    warnHeader: "認識できなかった行（スキップ）Unrecognized lines:",
+    warnLine: (lineNo, txt) => `${lineNo} 行目エラー Line ${lineNo}: "${txt}"`,
     unnamedTeam: (n) => `名称未設定#${n}`,
-    alertNoSaveData: "保存できる有効な連隊データがありません！",
-    alertNoPreset: "定番リストがまだ保存されていません！先に連隊を入力して保存してください。",
-    alertReadPresetFail: "定番リストの読み込みに失敗しました。",
-    alertInvalidJson: "JSONファイルの形式が正しくありません。",
-    alertNoExportData: "出力する編成データがありません！",
-    alertNoImgData: "画像を生成するデータがありません。先に「自動バランス実行」を押してください！",
+    alertNoSaveData: "保存できる有効なデータがありません！No valid rows to save!",
+    alertNoPreset: "定番リストがまだ保存されていません！No preset saved yet!",
+    alertReadPresetFail: "定番リストの読み込みに失敗しました。Failed to load preset.",
+    alertInvalidJson: "JSONファイルの形式が正しくありません。Invalid JSON file.",
+    alertNoExportData: "出力する編成データがありません！No data to export!",
+    alertNoImgData: "画像を生成するデータがありません！No data to render!",
     noticeItem: (item, r, formulaStr) => {
-      const reasonStr = r.reason ? `（根拠：${r.reason}）` : "";
-      return `${item.name}：申告 ${item.rawMin}-${item.rawMax}名 → 補正後 ${item.min}-${item.max}名 [${formulaStr}]${reasonStr}`;
+      const reasonStr = r.reason ? `（根拠 Basis：${r.reason}）` : "";
+      return `${item.name}：申告 Raw ${item.rawMin}-${item.rawMax} → 補正 Adj ${item.min}-${item.max} [${formulaStr}]${reasonStr}`;
     },
-    factorLabel: (f) => `係数 ×${f}`,
-    deltaLabel: (d) => `増減 ${d > 0 ? "+" + d : d}名`,
-    exportTitle: "【War of Rights 連隊陣営編成表】",
-    exportUSA: (min, max, avg) => `🔵 USA 北軍 [補正予測 ${min}-${max} 名 | 平均 ${avg}]：`,
-    exportCSA: (min, max, avg) => `⚪ CSA 南軍 [補正予測 ${min}-${max} 名 | 平均 ${avg}]：`,
-    exportLineMod: (name, adj, rMin, rMax) => `• ${name}：補正 ${adj}（元申告 ${rMin}-${rMax}名）`,
-    exportLineNorm: (name, adj) => `• ${name}：${adj}`,
-    exportDiff: (minD, maxD) => `📊 両軍補正後人数差：下限差 ${minD} 名 / 上限差 ${maxD} 名`,
-    exportNoticeHeader: "⚖️ 【人数補正に関する公開公示】：",
-    imgTitle: "WAR OF RIGHTS · 連隊陣営人数バランス編成表",
-    imgSubtitle: (timeStr, minD, maxD) => `作成日時：${timeStr}   |   両軍補正後人数差：下限差 ${minD} 名 / 上限差 ${maxD} 名`,
+    factorLabel: (f) => `係数Factor ×${f}`,
+    deltaLabel: (d) => `増減Offset ${d > 0 ? "+" + d : d}`,
+    exportTitle: "【War of Rights 連隊陣営編成表 Event Faction Roster】",
+    exportModeLine: (modeName) => `⚖️ バランス方式 Balance Mode：${modeName}`,
+    exportUSA: (min, max, avg, l, m, s) => `🔵 USA 北軍 Union [補正予測 ${min}-${max} | 平均Avg ${avg} | 大L:${l} 中M:${m} 小S:${s}]：`,
+    exportCSA: (min, max, avg, l, m, s) => `⚪ CSA 南軍 Confederate [補正予測 ${min}-${max} | 平均Avg ${avg} | 大L:${l} 中M:${m} 小S:${s}]：`,
+    exportLineMod: (name, adj, rMin, rMax, bTag) => `• ${name} [${bTag}]：補正Adj ${adj}（元申告Raw ${rMin}-${rMax}）`,
+    exportLineNorm: (name, adj, bTag) => `• ${name} [${bTag}]：${adj}`,
+    exportDiff: (minD, maxD, tDiff) => `📊 両軍補正差 Diff：下限差Min ${minD} / 上限差Max ${maxD} / 連隊差Teams ${tDiff}`,
+    exportNoticeHeader: "⚖️ 【人数補正に関する公開公示 Public Adjustment Disclosure】：",
+    imgTitle: "WAR OF RIGHTS · 連隊陣営人数バランス編成表 EVENT ROSTER",
+    imgSubtitle: (timeStr, modeName, minD, maxD, tDiff) => `${timeStr}  |  ${modeName}  |  下限差Min:${minD} 上限差Max:${maxD} 連隊差Teams:${tDiff}`,
     imgUSATitle: "USA 北軍",
     imgCSATitle: "CSA 南軍",
-    imgCardSub: (avg, rMin, rMax) => `補正平均 ${avg} | 元申告 ${rMin}-${rMax}`,
-    imgTableTeams: (n) => `計 ${n} 連隊`,
-    imgRowMod: (adjStr, rMin, rMax) => `補正 ${adjStr} (元${rMin}-${rMax})`,
-    imgFootLabel: "合計補正予測",
-    imgNoticeTitle: "⚖️ 本イベントの人数補正に関する公開公示：",
-    imgFooter: "War of Rights Team Balancer · 自動バランス・人数補正公示システム"
+    imgCardSub: (avg, rMin, rMax) => `平均Avg ${avg} | 元申告Raw ${rMin}-${rMax}`,
+    imgTableTeams: (n, l, m, s) => `${n}連隊 (L:${l} M:${m} S:${s})`,
+    imgRowMod: (adjStr, rMin, rMax, bShort) => `[${bShort}] 補正${adjStr} (元${rMin}-${rMax})`,
+    imgRowNorm: (adjStr, bShort) => `[${bShort}] ${adjStr}`,
+    imgFootLabel: "合計 Total",
+    imgNoticeTitle: "⚖️ 本イベントの人数補正に関する公開公示 Public Adjustment Disclosure：",
+    imgFooter: "War of Rights Team Balancer · 日英自動バランス・人数修正公示システム"
   }
 };
 
-// 当前语言状态
-let currentLang = localStorage.getItem(STORAGE_KEY_LANG) || "zh";
-if (!I18N[currentLang]) currentLang = "zh";
+// 当前双语模式状态 ("zh_en" 或 "ja_en")
+let currentLang = localStorage.getItem(STORAGE_KEY_LANG) || "zh_en";
+if (!I18N[currentLang]) currentLang = "zh_en";
 
 function t(key, ...args) {
-  const dict = I18N[currentLang] || I18N.zh;
+  const dict = I18N[currentLang] || I18N.zh_en;
   const val = dict[key];
   if (typeof val === "function") return val(...args);
   return val !== undefined ? val : key;
@@ -363,6 +281,7 @@ function t(key, ...args) {
 // 核心数据模型
 let entryRows = [];
 let auditRules = [];
+let currentMode = "pure"; // "pure" | "bracket" | "small_comp"
 let currentState = { usa: [], csa: [] };
 
 // DOM 引用
@@ -373,13 +292,14 @@ const textInputView = document.getElementById("textInputView");
 const entryTbody = document.getElementById("entryTbody");
 const auditTbody = document.getElementById("auditTbody");
 const rosterInput = document.getElementById("rosterInput");
-const balanceModeSelect = document.getElementById("balanceMode");
 const parseWarning = document.getElementById("parseWarning");
 const saveIndicator = document.getElementById("saveIndicator");
+const activeModeTag = document.getElementById("activeModeTag");
 
 // 初始化加载
 window.addEventListener("DOMContentLoaded", () => {
   bindLanguageButtons();
+  bindStrategyCards();
   loadFromAutoSave();
   applyLanguage(currentLang, false);
 });
@@ -393,6 +313,53 @@ function bindLanguageButtons() {
       }
     });
   });
+}
+
+function bindStrategyCards() {
+  document.querySelectorAll(".strategy-card").forEach((card) => {
+    const selectHandler = () => {
+      const mode = card.getAttribute("data-mode");
+      if (!mode) return;
+      setStrategyMode(mode, true);
+    };
+    card.addEventListener("click", selectHandler);
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectHandler();
+      }
+    });
+  });
+}
+
+function setStrategyMode(mode, triggerBalance = false) {
+  if (!["pure", "bracket", "small_comp"].includes(mode)) {
+    mode = "pure";
+  }
+  currentMode = mode;
+
+  document.querySelectorAll(".strategy-card").forEach((card) => {
+    card.classList.toggle("active", card.getAttribute("data-mode") === mode);
+  });
+
+  updateActiveModeLabel();
+  saveToAutoSave();
+
+  if (triggerBalance && getCleanRowsFromEntry().length > 0) {
+    runBalance();
+  }
+}
+
+function getModeDisplayName(mode) {
+  if (mode === "bracket") return t("modeBracketTitle");
+  if (mode === "small_comp") return t("modeSmallCompTitle");
+  return t("modePureTitle");
+}
+
+function updateActiveModeLabel() {
+  if (activeModeTag) {
+    activeModeTag.textContent = t("activeModeLabel", getModeDisplayName(currentMode));
+  }
 }
 
 function applyLanguage(lang, reRenderAll = true) {
@@ -414,6 +381,7 @@ function applyLanguage(lang, reRenderAll = true) {
     el.innerHTML = t(key);
   });
 
+  updateActiveModeLabel();
   if (saveIndicator) {
     saveIndicator.textContent = t("saveEnabled");
   }
@@ -519,9 +487,9 @@ document.getElementById("loadPresetBtn").addEventListener("click", () => {
 // 导出 JSON 配置文件
 document.getElementById("exportJsonBtn").addEventListener("click", () => {
   const backupData = {
-    version: "WoR-Balancer-v6",
+    version: "WoR-Balancer-v7",
     exportedAt: new Date().toISOString(),
-    balanceMode: balanceModeSelect.value,
+    balanceMode: currentMode,
     entryRows,
     auditRules,
     presetRows: JSON.parse(localStorage.getItem(STORAGE_KEY_PRESET) || "[]")
@@ -560,7 +528,7 @@ importJsonInput.addEventListener("change", (e) => {
         localStorage.setItem(STORAGE_KEY_PRESET, JSON.stringify(data.presetRows));
       }
       if (data.balanceMode) {
-        balanceModeSelect.value = data.balanceMode;
+        setStrategyMode(data.balanceMode, false);
       }
       renderEntryTable();
       renderAuditTable();
@@ -576,31 +544,27 @@ importJsonInput.addEventListener("change", (e) => {
   reader.readAsText(file);
 });
 
-// 填入示例数据
+// 填入示例数据（以 [18thVA] 为首）
 document.getElementById("sampleBtn").addEventListener("click", () => {
-  const pubsName = currentLang === "en" ? "Pubs" : currentLang === "ja" ? "野良プレイヤー" : "散人玩家";
+  const pubsName = currentLang === "ja_en" ? "野良 Pubs" : "散人 Pubs";
   entryRows = [
     { id: genId(), name: "[18thVA]", min: 15, max: 20, lockedFaction: null },
-    { id: genId(), name: "[HD]", min: 25, max: 30, lockedFaction: null },
-    { id: genId(), name: "[1stTX]", min: 12, max: 16, lockedFaction: null },
-    { id: genId(), name: "[69thNY]", min: 20, max: 25, lockedFaction: null },
+    { id: genId(), name: "[HD]", min: 26, max: 32, lockedFaction: null },
+    { id: genId(), name: "[1stTX]", min: 18, max: 22, lockedFaction: null },
+    { id: genId(), name: "[69thNY]", min: 28, max: 34, lockedFaction: null },
     { id: genId(), name: "[4thVA]", min: 10, max: 14, lockedFaction: "CSA" },
     { id: genId(), name: "[20thME]", min: 14, max: 18, lockedFaction: "USA" },
     { id: genId(), name: "[9thNY]", min: 8, max: 10, lockedFaction: null },
-    { id: genId(), name: pubsName, min: 10, max: 15, lockedFaction: null }
+    { id: genId(), name: pubsName, min: 10, max: 14, lockedFaction: null }
   ];
 
   if (auditRules.length === 0) {
-    const r1 = currentLang === "en"
-      ? "~80% average turnout over last 3 events"
-      : currentLang === "ja"
-        ? "直近3回の出席率が約80%のため8掛け補正"
-        : "近三次联队实际到场率约 80%，按八折修正虚报";
-    const r2 = currentLang === "en"
-      ? "Usually brings ~3 extra players than reported"
-      : currentLang === "ja"
-        ? "控えめな申告傾向があり実際は約3名多く参加"
-        : "保守少报倾向，实际开战后通常多到 3 人左右";
+    const r1 = currentLang === "ja_en"
+      ? "直近3回の出席率約80% / ~80% average turnout"
+      : "近三次联队实际到场率约 80% / ~80% average turnout";
+    const r2 = currentLang === "ja_en"
+      ? "控えめな申告で実際は+3名 / Usually +3 extra players"
+      : "保守少报倾向，实际多到约 3 人 / Usually +3 extra players";
 
     auditRules = [
       { id: genId(), tag: "[69thNY]", factor: 0.8, delta: 0, reason: r1 },
@@ -625,14 +589,6 @@ document.getElementById("clearBtn").addEventListener("click", () => {
   renderEntryTable();
   renderResultTables();
   saveToAutoSave();
-});
-
-// 策略切换
-balanceModeSelect.addEventListener("change", () => {
-  saveToAutoSave();
-  if (getCleanRowsFromEntry().length > 0) {
-    runBalance();
-  }
 });
 
 // 点击“开始自动平衡”
@@ -698,6 +654,38 @@ function applyAuditToTeam(rawMin, rawMax, rule) {
 
   const isModified = adjMin !== rawMin || adjMax !== rawMax;
   return { adjMin, adjMax, isModified };
+}
+
+/**
+ * 分级规则（依据参考图）：
+ * 中位数 > 26 = 大型 (2槽)
+ * 中位数 > 16 = 中型 (1槽)
+ * 其余 <= 16  = 小型 (1槽)
+ */
+function classifyBracket(mid) {
+  if (mid > 26) {
+    return { bracket: "L", slots: 2 };
+  }
+  if (mid > 16) {
+    return { bracket: "M", slots: 1 };
+  }
+  return { bracket: "S", slots: 1 };
+}
+
+function getBracketBadgeHtml(bracket) {
+  if (bracket === "L") {
+    return `<span class="bracket-pill bracket-large">${escapeHtml(t("bracketLarge"))}</span>`;
+  }
+  if (bracket === "M") {
+    return `<span class="bracket-pill bracket-medium">${escapeHtml(t("bracketMedium"))}</span>`;
+  }
+  return `<span class="bracket-pill bracket-small">${escapeHtml(t("bracketSmall"))}</span>`;
+}
+
+function getBracketShortLabel(bracket) {
+  if (bracket === "L") return t("bracketShortL");
+  if (bracket === "M") return t("bracketShortM");
+  return t("bracketShortS");
 }
 
 function renderAuditTable() {
@@ -775,9 +763,10 @@ function renderEntryTable() {
     .map((row) => {
       const rule = findAuditRuleForTeam(row.name);
       const { adjMin, adjMax, isModified } = applyAuditToTeam(row.min, row.max, rule);
-      const previewText = isModified
-        ? t("adjModifiedTag", adjMin, adjMax)
-        : t("adjNormalTag", adjMin, adjMax);
+      const mid = (adjMin + adjMax) / 2;
+      const { bracket } = classifyBracket(mid);
+      const rangeStr = `${adjMin}-${adjMax}`;
+      const badgeHtml = getBracketBadgeHtml(bracket);
 
       return `
         <tr data-id="${row.id}">
@@ -797,7 +786,7 @@ function renderEntryTable() {
               onchange="updateEntryRow('${row.id}', 'max', this.value)" />
           </td>
           <td>
-            <span id="preview_${row.id}" class="adj-preview ${isModified ? "modified" : ""}">${previewText}</span>
+            <span id="preview_${row.id}" class="adj-preview ${isModified ? "modified" : ""}">${rangeStr} ${badgeHtml}</span>
           </td>
           <td>
             <select id="entry_lock_${row.id}" name="entry_lock_${row.id}" class="cell-select" onchange="updateEntryRow('${row.id}', 'lockedFaction', this.value)">
@@ -843,7 +832,9 @@ window.updateEntryRow = function (id, field, value) {
   if (previewEl) {
     const rule = findAuditRuleForTeam(row.name);
     const { adjMin, adjMax, isModified } = applyAuditToTeam(row.min, row.max, rule);
-    previewEl.textContent = isModified ? t("adjModifiedTag", adjMin, adjMax) : t("adjNormalTag", adjMin, adjMax);
+    const mid = (adjMin + adjMax) / 2;
+    const { bracket } = classifyBracket(mid);
+    previewEl.innerHTML = `${adjMin}-${adjMax} ${getBracketBadgeHtml(bracket)}`;
     previewEl.className = `adj-preview ${isModified ? "modified" : ""}`;
   }
 
@@ -881,6 +872,8 @@ function getCleanRowsFromEntry() {
       const name = r.name.trim() || t("unnamedTeam", idx + 1);
       const auditRule = findAuditRuleForTeam(name);
       const { adjMin, adjMax, isModified } = applyAuditToTeam(rawMin, rawMax, auditRule);
+      const avg = (adjMin + adjMax) / 2;
+      const { bracket, slots } = classifyBracket(avg);
 
       return {
         id: r.id,
@@ -889,9 +882,12 @@ function getCleanRowsFromEntry() {
         rawMax,
         min: adjMin,
         max: adjMax,
-        avg: (adjMin + adjMax) / 2,
+        avg,
+        bracket,
+        slots,
         lockedFaction: r.lockedFaction || null,
         isModified,
+        isSeed: false,
         auditRule: isModified ? auditRule : null
       };
     });
@@ -949,32 +945,92 @@ function showWarnings(invalidLines) {
 }
 
 /**
- * 阵营人数平衡核心算法（精确枚举全局最优解）
+ * 核心平衡求解器（支持三种策略）：
+ * 1. pure: 纯平衡（只根据人数上限与中位数平衡，不考虑战队分级）
+ * 2. bracket: 分级平衡（先平衡人数，再平衡大/中/小各级战队数，两队总数量差 <= 2）
+ * 3. small_comp: 小战队补偿（先选出小型战队作为种子，其余分级平衡后将种子补入人数劣势方）
  */
-function balanceTeams(teams, mode = "balanced") {
+function balanceTeams(teams, mode = "pure") {
   const fixedUSA = [];
   const fixedCSA = [];
-  const freeTeams = [];
+  let freeTeams = [];
 
-  teams.forEach((tItem) => {
-    if (tItem.lockedFaction === "USA") fixedUSA.push(tItem);
-    else if (tItem.lockedFaction === "CSA") fixedCSA.push(tItem);
-    else freeTeams.push(tItem);
+  teams.forEach((item) => {
+    const copy = { ...item, isSeed: false };
+    if (copy.lockedFaction === "USA") fixedUSA.push(copy);
+    else if (copy.lockedFaction === "CSA") fixedCSA.push(copy);
+    else freeTeams.push(copy);
   });
 
+  // 模式 3：小战队补偿（先提取小型战队作为补偿种子池）
+  let seedPool = [];
+  if (mode === "small_comp") {
+    const smallFree = freeTeams.filter((tItem) => tItem.bracket === "S");
+    const nonSmallFree = freeTeams.filter((tItem) => tItem.bracket !== "S");
+    // 选取最多 2 支小型战队作为补偿种子（优先保留至少 1 支做尾差补偿）
+    if (smallFree.length > 0) {
+      smallFree.sort((a, b) => a.avg - b.avg);
+      const seedCount = Math.min(2, smallFree.length);
+      seedPool = smallFree.slice(0, seedCount).map((s) => ({ ...s, isSeed: true }));
+      freeTeams = [...nonSmallFree, ...smallFree.slice(seedCount)];
+    }
+  }
+
+  // 主体配平
+  const mainResult = solvePartition(fixedUSA, fixedCSA, freeTeams, mode);
+  let resUSA = mainResult.usa;
+  let resCSA = mainResult.csa;
+
+  // 若存在小战队补偿种子，依次补入当前中位数人数较少的一侧（同时兼顾两队数量差 <= 2）
+  if (seedPool.length > 0) {
+    seedPool.forEach((seed) => {
+      const uStat = sumStats(resUSA);
+      const cStat = sumStats(resCSA);
+      const uCount = resUSA.length;
+      const cCount = resCSA.length;
+
+      // 优先补入人数少的一侧；若人数接近但一侧队伍已多出 2 支，则补入队伍少的一侧
+      if (uCount - cCount >= 2) {
+        resCSA.push(seed);
+      } else if (cCount - uCount >= 2) {
+        resUSA.push(seed);
+      } else if (uStat.avg <= cStat.avg) {
+        resUSA.push(seed);
+      } else {
+        resCSA.push(seed);
+      }
+    });
+  }
+
+  return { usa: resUSA, csa: resCSA };
+}
+
+function solvePartition(fixedUSA, fixedCSA, freeTeams, mode) {
   freeTeams.sort((a, b) => b.avg - a.avg);
 
-  const baseUSA = sumStats(fixedUSA);
-  const baseCSA = sumStats(fixedCSA);
+  const baseU = sumStats(fixedUSA);
+  const baseC = sumStats(fixedCSA);
 
-  function calcPenalty(uMin, uMax, cMin, cMax) {
-    const diffMin = Math.abs(uMin - cMin);
+  function evaluateState(uMin, uMax, uAvg, uCnt, uL, uM, uS, cMin, cMax, cAvg, cCnt, cL, cM, cS) {
     const diffMax = Math.abs(uMax - cMax);
-    const diffAvg = Math.abs((uMin + uMax) / 2 - (cMin + cMax) / 2);
+    const diffAvg = Math.abs(uAvg - cAvg);
+    const diffMin = Math.abs(uMin - cMin);
 
-    if (mode === "min") return diffMin * 10 + diffAvg * 2 + diffMax;
-    if (mode === "max") return diffMax * 10 + diffAvg * 2 + diffMin;
-    return diffAvg * 4 + diffMin * 2 + diffMax * 2;
+    if (mode === "pure") {
+      // 纯平衡：只根据人数上限和中位数平衡，不考虑战队分级
+      return diffAvg * 10 + diffMax * 6 + diffMin * 1;
+    }
+
+    // 分级平衡 / 小战队补偿主体：先平衡人数，再平衡各级战队数，两队数量差 <= 2
+    const teamDiff = Math.abs(uCnt - cCnt);
+    const teamCapPenalty = teamDiff > 2 ? (teamDiff - 2) * 5000 : 0;
+    const bracketDiffPenalty =
+      Math.abs(uL - cL) * 18 +
+      Math.abs(uM - cM) * 10 +
+      Math.abs(uS - cS) * 8 +
+      teamDiff * 6;
+
+    return teamCapPenalty + diffAvg * 25 + diffMax * 12 + diffMin * 3 + bracketDiffPenalty;
   }
 
   let bestUSA = [];
@@ -984,9 +1040,9 @@ function balanceTeams(teams, mode = "balanced") {
     let bestScore = Infinity;
     let bestMask = 0;
 
-    function dfs(idx, uMin, uMax, cMin, cMax, mask) {
+    function dfs(idx, uMin, uMax, uAvg, uCnt, uL, uM, uS, cMin, cMax, cAvg, cCnt, cL, cM, cS, mask) {
       if (idx === freeTeams.length) {
-        const score = calcPenalty(uMin, uMax, cMin, cMax);
+        const score = evaluateState(uMin, uMax, uAvg, uCnt, uL, uM, uS, cMin, cMax, cAvg, cCnt, cL, cM, cS);
         if (score < bestScore) {
           bestScore = score;
           bestMask = mask;
@@ -995,36 +1051,70 @@ function balanceTeams(teams, mode = "balanced") {
       }
 
       const item = freeTeams[idx];
-      dfs(idx + 1, uMin + item.min, uMax + item.max, cMin, cMax, mask | (1 << idx));
+      const addL = item.bracket === "L" ? 1 : 0;
+      const addM = item.bracket === "M" ? 1 : 0;
+      const addS = item.bracket === "S" ? 1 : 0;
 
+      // 放入 USA
+      dfs(
+        idx + 1,
+        uMin + item.min, uMax + item.max, uAvg + item.avg, uCnt + 1, uL + addL, uM + addM, uS + addS,
+        cMin, cMax, cAvg, cCnt, cL, cM, cS,
+        mask | (1 << idx)
+      );
+
+      // 无固定队伍时对称去重
       if (idx === 0 && fixedUSA.length === 0 && fixedCSA.length === 0) {
         return;
       }
 
-      dfs(idx + 1, uMin, uMax, cMin + item.min, cMax + item.max, mask);
+      // 放入 CSA
+      dfs(
+        idx + 1,
+        uMin, uMax, uAvg, uCnt, uL, uM, uS,
+        cMin + item.min, cMax + item.max, cAvg + item.avg, cCnt + 1, cL + addL, cM + addM, cS + addS,
+        mask
+      );
     }
 
-    dfs(0, baseUSA.min, baseUSA.max, baseCSA.min, baseCSA.max, 0);
+    dfs(
+      0,
+      baseU.min, baseU.max, baseU.avg, fixedUSA.length, baseU.countL, baseU.countM, baseU.countS,
+      baseC.min, baseC.max, baseC.avg, fixedCSA.length, baseC.countL, baseC.countM, baseC.countS,
+      0
+    );
 
     freeTeams.forEach((item, i) => {
       if (bestMask & (1 << i)) bestUSA.push(item);
       else bestCSA.push(item);
     });
   } else {
-    let uMin = baseUSA.min, uMax = baseUSA.max;
-    let cMin = baseCSA.min, cMax = baseCSA.max;
+    // 超过 20 支队伍时的兜底贪心
+    let u = { ...baseU, cnt: fixedUSA.length };
+    let c = { ...baseC, cnt: fixedCSA.length };
 
     freeTeams.forEach((item) => {
-      const scoreIfUSA = calcPenalty(uMin + item.min, uMax + item.max, cMin, cMax);
-      const scoreIfCSA = calcPenalty(uMin, uMax, cMin + item.min, cMax + item.max);
-      if (scoreIfUSA <= scoreIfCSA) {
+      const addL = item.bracket === "L" ? 1 : 0;
+      const addM = item.bracket === "M" ? 1 : 0;
+      const addS = item.bracket === "S" ? 1 : 0;
+
+      const sUSA = evaluateState(
+        u.min + item.min, u.max + item.max, u.avg + item.avg, u.cnt + 1, u.countL + addL, u.countM + addM, u.countS + addS,
+        c.min, c.max, c.avg, c.cnt, c.countL, c.countM, c.countS
+      );
+      const sCSA = evaluateState(
+        u.min, u.max, u.avg, u.cnt, u.countL, u.countM, u.countS,
+        c.min + item.min, c.max + item.max, c.avg + item.avg, c.cnt + 1, c.countL + addL, c.countM + addM, c.countS + addS
+      );
+
+      if (sUSA <= sCSA) {
         bestUSA.push(item);
-        uMin += item.min;
-        uMax += item.max;
+        u.min += item.min; u.max += item.max; u.avg += item.avg; u.cnt++;
+        u.countL += addL; u.countM += addM; u.countS += addS;
       } else {
         bestCSA.push(item);
-        cMin += item.min;
-        cMax += item.max;
+        c.min += item.min; c.max += item.max; c.avg += item.avg; c.cnt++;
+        c.countL += addL; c.countM += addM; c.countS += addS;
       }
     });
   }
@@ -1038,14 +1128,20 @@ function balanceTeams(teams, mode = "balanced") {
 function sumStats(list) {
   return list.reduce(
     (acc, item) => {
+      const avg = item.avg ?? (item.min + item.max) / 2;
+      const bInfo = item.bracket ? { bracket: item.bracket, slots: item.slots || (item.bracket === "L" ? 2 : 1) } : classifyBracket(avg);
       acc.rawMin += item.rawMin ?? item.min;
       acc.rawMax += item.rawMax ?? item.max;
       acc.min += item.min;
       acc.max += item.max;
-      acc.avg += item.avg ?? (item.min + item.max) / 2;
+      acc.avg += avg;
+      acc.slots += bInfo.slots;
+      if (bInfo.bracket === "L") acc.countL += 1;
+      else if (bInfo.bracket === "M") acc.countM += 1;
+      else acc.countS += 1;
       return acc;
     },
-    { rawMin: 0, rawMax: 0, min: 0, max: 0, avg: 0 }
+    { rawMin: 0, rawMax: 0, min: 0, max: 0, avg: 0, slots: 0, countL: 0, countM: 0, countS: 0 }
   );
 }
 
@@ -1058,7 +1154,7 @@ function runBalance() {
     return;
   }
 
-  currentState = balanceTeams(teams, balanceModeSelect.value);
+  currentState = balanceTeams(teams, currentMode);
   renderResultTables();
   saveToAutoSave();
 }
@@ -1082,24 +1178,21 @@ function renderResultTables() {
   renderPublicNotice();
 }
 
-function formatHeadcount(min, max) {
-  const unit = t("unitPerson") ? ` ${t("unitPerson")}` : "";
-  return min === max ? `${min}${unit}` : `${min}-${max}${unit}`;
-}
-
 function renderSingleResultTable(faction, list) {
   const tbody = document.getElementById(`${faction}Tbody`);
   const countTag = document.getElementById(`${faction}CountTag`);
   const footRaw = document.getElementById(`${faction}FootRaw`);
   const footAdj = document.getElementById(`${faction}FootAdj`);
+  const footSlots = document.getElementById(`${faction}FootSlots`);
 
   if (countTag) countTag.textContent = t("teamCount", list.length);
   if (!tbody) return;
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">${escapeHtml(t("emptyResultRow"))}</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">${escapeHtml(t("emptyResultRow"))}</td></tr>`;
     if (footRaw) footRaw.innerHTML = `<strong>0 - 0</strong>`;
     if (footAdj) footAdj.innerHTML = `<strong>0 - 0 (0.0)</strong>`;
+    if (footSlots) footSlots.innerHTML = `<strong>${escapeHtml(t("slotCount", 0))}</strong>`;
     return;
   }
 
@@ -1109,8 +1202,11 @@ function renderSingleResultTable(faction, list) {
     .map((item) => {
       const rMin = item.rawMin ?? item.min;
       const rMax = item.rawMax ?? item.max;
-      const rawText = formatHeadcount(rMin, rMax);
-      const adjText = formatHeadcount(item.min, item.max);
+      const avg = item.avg ?? (item.min + item.max) / 2;
+      const bracket = item.bracket || classifyBracket(avg).bracket;
+
+      const rawText = `${rMin}-${rMax}`;
+      const adjText = `${item.min}-${item.max}`;
 
       const badges = [];
       if (item.lockedFaction) {
@@ -1118,6 +1214,9 @@ function renderSingleResultTable(faction, list) {
       }
       if (item.isModified) {
         badges.push(`<span class="tag-audit">${escapeHtml(t("statusModified"))}</span>`);
+      }
+      if (item.isSeed) {
+        badges.push(`<span class="tag-seed">${escapeHtml(t("statusSeed"))}</span>`);
       }
       if (badges.length === 0) {
         badges.push(`<span class="tag-auto">${escapeHtml(t("statusAuto"))}</span>`);
@@ -1128,6 +1227,7 @@ function renderSingleResultTable(faction, list) {
           <td><strong>${escapeHtml(item.name)}</strong></td>
           <td>${rawText}</td>
           <td><strong style="color:${item.isModified ? "#f0b866" : "inherit"}">${adjText}</strong></td>
+          <td>${getBracketBadgeHtml(bracket)}</td>
           <td>${badges.join(" ")}</td>
           <td>
             <button class="swap-btn" type="button" onclick="swapTeamFaction('${item.id}', '${faction}')">
@@ -1140,35 +1240,44 @@ function renderSingleResultTable(faction, list) {
     .join("");
 
   const stats = sumStats(list);
-  if (footRaw) footRaw.innerHTML = `<strong>${formatHeadcount(stats.rawMin, stats.rawMax)}</strong>`;
+  if (footRaw) footRaw.innerHTML = `<strong>${stats.rawMin}-${stats.rawMax}</strong>`;
   if (footAdj) footAdj.innerHTML = `<strong>${t("footAdjSummary", stats.min, stats.max, stats.avg.toFixed(1))}</strong>`;
+  if (footSlots) footSlots.innerHTML = `<strong>${escapeHtml(t("slotCount", stats.slots))}</strong>`;
 }
 
 function updateSummary() {
   const uStats = sumStats(currentState.usa);
   const cStats = sumStats(currentState.csa);
 
-  const unit = t("unitPerson") ? ` ${t("unitPerson")}` : "";
-
   const usaRangeEl = document.getElementById("usaRange");
   const usaAvgEl = document.getElementById("usaAvg");
+  const usaBracketsEl = document.getElementById("usaBrackets");
+
   const csaRangeEl = document.getElementById("csaRange");
   const csaAvgEl = document.getElementById("csaAvg");
+  const csaBracketsEl = document.getElementById("csaBrackets");
+
   const diffSummaryEl = document.getElementById("diffSummary");
   const avgDiffSummaryEl = document.getElementById("avgDiffSummary");
+  const teamDiffSummaryEl = document.getElementById("teamDiffSummary");
 
-  if (usaRangeEl) usaRangeEl.textContent = `${uStats.min} - ${uStats.max}${unit}`;
+  if (usaRangeEl) usaRangeEl.textContent = `${uStats.min} - ${uStats.max}`;
   if (usaAvgEl) usaAvgEl.textContent = t("summarySub", uStats.avg.toFixed(1), uStats.rawMin, uStats.rawMax);
+  if (usaBracketsEl) usaBracketsEl.textContent = t("bracketBreakdown", uStats.countL, uStats.countM, uStats.countS, uStats.slots);
 
-  if (csaRangeEl) csaRangeEl.textContent = `${cStats.min} - ${cStats.max}${unit}`;
+  if (csaRangeEl) csaRangeEl.textContent = `${cStats.min} - ${cStats.max}`;
   if (csaAvgEl) csaAvgEl.textContent = t("summarySub", cStats.avg.toFixed(1), cStats.rawMin, cStats.rawMax);
+  if (csaBracketsEl) csaBracketsEl.textContent = t("bracketBreakdown", cStats.countL, cStats.countM, cStats.countS, cStats.slots);
 
   const minDiff = Math.abs(uStats.min - cStats.min);
   const maxDiff = Math.abs(uStats.max - cStats.max);
   const avgDiff = Math.abs(uStats.avg - cStats.avg);
+  const teamDiff = Math.abs(currentState.usa.length - currentState.csa.length);
+  const slotDiff = Math.abs(uStats.slots - cStats.slots);
 
   if (diffSummaryEl) diffSummaryEl.textContent = t("diffSubText", minDiff, maxDiff);
   if (avgDiffSummaryEl) avgDiffSummaryEl.textContent = t("avgDiffText", avgDiff.toFixed(1));
+  if (teamDiffSummaryEl) teamDiffSummaryEl.textContent = t("teamDiffText", teamDiff, slotDiff);
 }
 
 function getActivePublicNotices() {
@@ -1204,7 +1313,7 @@ function saveToAutoSave() {
     entryRows,
     auditRules,
     currentState,
-    balanceMode: balanceModeSelect.value
+    balanceMode: currentMode
   };
   localStorage.setItem(STORAGE_KEY_AUTO, JSON.stringify(payload));
   flashSaveIndicator(t("saveAutoDone"));
@@ -1214,6 +1323,7 @@ function loadFromAutoSave() {
   const raw = localStorage.getItem(STORAGE_KEY_AUTO);
   if (!raw) {
     entryRows = [createEmptyRow()];
+    setStrategyMode("pure", false);
     renderAuditTable();
     renderEntryTable();
     renderResultTables();
@@ -1227,9 +1337,7 @@ function loadFromAutoSave() {
       : [createEmptyRow()];
     auditRules = Array.isArray(saved.auditRules) ? saved.auditRules : [];
     currentState = saved.currentState || { usa: [], csa: [] };
-    if (saved.balanceMode) {
-      balanceModeSelect.value = saved.balanceMode;
-    }
+    setStrategyMode(saved.balanceMode || "pure", false);
     renderAuditTable();
     renderEntryTable();
     syncTableToText();
@@ -1237,6 +1345,7 @@ function loadFromAutoSave() {
     flashSaveIndicator(t("saveRestored"));
   } catch (e) {
     entryRows = [createEmptyRow()];
+    setStrategyMode("pure", false);
     renderAuditTable();
     renderEntryTable();
     renderResultTables();
@@ -1257,23 +1366,28 @@ function copyScheduleText() {
   }
 
   const formatLine = (item) => {
-    const adj = formatHeadcount(item.min, item.max);
+    const avg = item.avg ?? (item.min + item.max) / 2;
+    const bTag = getBracketShortLabel(item.bracket || classifyBracket(avg).bracket);
+    const adj = `${item.min}-${item.max}`;
     if (item.isModified) {
-      return t("exportLineMod", item.name, adj, item.rawMin, item.rawMax);
+      return t("exportLineMod", item.name, adj, item.rawMin, item.rawMax, bTag);
     }
-    return t("exportLineNorm", item.name, adj);
+    return t("exportLineNorm", item.name, adj, bTag);
   };
+
+  const teamDiff = Math.abs(currentState.usa.length - currentState.csa.length);
 
   const lines = [
     t("exportTitle"),
+    t("exportModeLine", getModeDisplayName(currentMode)),
     "",
-    t("exportUSA", uStats.min, uStats.max, uStats.avg.toFixed(1)),
+    t("exportUSA", uStats.min, uStats.max, uStats.avg.toFixed(1), uStats.countL, uStats.countM, uStats.countS),
     ...currentState.usa.map(formatLine),
     "",
-    t("exportCSA", cStats.min, cStats.max, cStats.avg.toFixed(1)),
+    t("exportCSA", cStats.min, cStats.max, cStats.avg.toFixed(1), cStats.countL, cStats.countM, cStats.countS),
     ...currentState.csa.map(formatLine),
     "",
-    t("exportDiff", Math.abs(uStats.min - cStats.min), Math.abs(uStats.max - cStats.max))
+    t("exportDiff", Math.abs(uStats.min - cStats.min), Math.abs(uStats.max - cStats.max), teamDiff)
   ];
 
   const notices = getActivePublicNotices();
@@ -1303,10 +1417,10 @@ function generateScheduleImage() {
   const cStats = sumStats(currentState.csa);
   const notices = getActivePublicNotices();
 
-  const width = 1040;
+  const width = 1080;
   const maxRows = Math.max(currentState.usa.length, currentState.csa.length, 1);
   const rowHeight = 42;
-  const tableStartY = 195;
+  const tableStartY = 200;
   const tableHeight = 44 + maxRows * rowHeight + 46;
   const noticeBlockHeight = notices.length > 0 ? 55 + notices.length * 28 : 0;
   const height = tableStartY + tableHeight + noticeBlockHeight + 65;
@@ -1327,34 +1441,34 @@ function generateScheduleImage() {
   ctx.strokeRect(12, 12, width - 24, height - 24);
 
   ctx.fillStyle = "#c8a252";
-  ctx.font = `bold 27px ${fontStack}`;
+  ctx.font = `bold 25px ${fontStack}`;
   ctx.textAlign = "center";
-  ctx.fillText(t("imgTitle"), width / 2, 58);
+  ctx.fillText(t("imgTitle"), width / 2, 56);
 
   ctx.fillStyle = "#9aa3b2";
-  ctx.font = `14px ${fontStack}`;
-  const localeMap = { zh: "zh-CN", en: "en-US", ja: "ja-JP" };
+  ctx.font = `13.5px ${fontStack}`;
+  const localeMap = { zh_en: "zh-CN", ja_en: "ja-JP" };
   const timeStr = new Date().toLocaleString(localeMap[currentLang] || "zh-CN", { hour12: false });
   const minDiff = Math.abs(uStats.min - cStats.min);
   const maxDiff = Math.abs(uStats.max - cStats.max);
-  ctx.fillText(t("imgSubtitle", timeStr, minDiff, maxDiff), width / 2, 86);
+  const teamDiff = Math.abs(currentState.usa.length - currentState.csa.length);
+  ctx.fillText(t("imgSubtitle", timeStr, getModeDisplayName(currentMode), minDiff, maxDiff, teamDiff), width / 2, 84);
 
-  const unit = t("unitPerson") ? ` ${t("unitPerson")}` : "";
   drawSummaryBox(
-    ctx, fontStack, 36, 108, 465, 68, "#1f4268", "#7fb3eb",
+    ctx, fontStack, 36, 108, 485, 70, "#1f4268", "#7fb3eb",
     t("imgUSATitle"),
-    `${uStats.min} - ${uStats.max}${unit}`,
+    `${uStats.min} - ${uStats.max}`,
     t("imgCardSub", uStats.avg.toFixed(1), uStats.rawMin, uStats.rawMax)
   );
   drawSummaryBox(
-    ctx, fontStack, 539, 108, 465, 68, "#4b4f56", "#d1b48c",
+    ctx, fontStack, 559, 108, 485, 70, "#4b4f56", "#d1b48c",
     t("imgCSATitle"),
-    `${cStats.min} - ${cStats.max}${unit}`,
+    `${cStats.min} - ${cStats.max}`,
     t("imgCardSub", cStats.avg.toFixed(1), cStats.rawMin, cStats.rawMax)
   );
 
-  drawFactionTable(ctx, fontStack, 36, tableStartY, 465, maxRows, rowHeight, "#1f4268", t("usaHeader"), currentState.usa, uStats);
-  drawFactionTable(ctx, fontStack, 539, tableStartY, 465, maxRows, rowHeight, "#4b4f56", t("csaHeader"), currentState.csa, cStats);
+  drawFactionTable(ctx, fontStack, 36, tableStartY, 485, maxRows, rowHeight, "#1f4268", t("usaHeader"), currentState.usa, uStats);
+  drawFactionTable(ctx, fontStack, 559, tableStartY, 485, maxRows, rowHeight, "#4b4f56", t("csaHeader"), currentState.csa, cStats);
 
   if (notices.length > 0) {
     const ny = tableStartY + tableHeight + 20;
@@ -1370,7 +1484,7 @@ function generateScheduleImage() {
     ctx.fillText(t("imgNoticeTitle"), 52, ny + 28);
 
     ctx.fillStyle = "#e6e8ec";
-    ctx.font = `13.5px ${fontStack}`;
+    ctx.font = `13px ${fontStack}`;
     notices.forEach((line, idx) => {
       ctx.fillText(`• ${line}`, 54, ny + 54 + idx * 26);
     });
@@ -1395,21 +1509,21 @@ function drawSummaryBox(ctx, fontStack, x, y, w, h, headerColor, accentColor, ti
   ctx.strokeRect(x, y, w, h);
 
   ctx.fillStyle = headerColor;
-  ctx.fillRect(x, y, 132, h);
+  ctx.fillRect(x, y, 134, h);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = `bold 14px ${fontStack}`;
+  ctx.font = `bold 14.5px ${fontStack}`;
   ctx.textAlign = "center";
-  ctx.fillText(title, x + 66, y + 40);
+  ctx.fillText(title, x + 67, y + 41);
 
   ctx.fillStyle = accentColor;
   ctx.font = `bold 21px ${fontStack}`;
   ctx.textAlign = "left";
-  ctx.fillText(mainText, x + 146, y + 33);
+  ctx.fillText(mainText, x + 150, y + 34);
 
   ctx.fillStyle = "#9aa3b2";
   ctx.font = `12.5px ${fontStack}`;
-  ctx.fillText(subText, x + 146, y + 55);
+  ctx.fillText(subText, x + 150, y + 56);
 }
 
 function drawFactionTable(ctx, fontStack, x, y, w, maxRows, rowH, headerColor, title, list, stats) {
@@ -1423,13 +1537,13 @@ function drawFactionTable(ctx, fontStack, x, y, w, maxRows, rowH, headerColor, t
   ctx.fillStyle = headerColor;
   ctx.fillRect(x, y, w, 44);
   ctx.fillStyle = "#ffffff";
-  ctx.font = `bold 15.5px ${fontStack}`;
+  ctx.font = `bold 15px ${fontStack}`;
   ctx.textAlign = "left";
   ctx.fillText(title, x + 16, y + 28);
 
   ctx.textAlign = "right";
-  ctx.font = `13px ${fontStack}`;
-  ctx.fillText(t("imgTableTeams", list.length), x + w - 16, y + 27);
+  ctx.font = `12.5px ${fontStack}`;
+  ctx.fillText(t("imgTableTeams", list.length, stats.countL, stats.countM, stats.countS), x + w - 16, y + 27);
 
   for (let i = 0; i < maxRows; i++) {
     const ry = y + 44 + i * rowH;
@@ -1446,21 +1560,24 @@ function drawFactionTable(ctx, fontStack, x, y, w, maxRows, rowH, headerColor, t
     const item = list[i];
     if (!item) continue;
 
+    const avg = item.avg ?? (item.min + item.max) / 2;
+    const bShort = getBracketShortLabel(item.bracket || classifyBracket(avg).bracket);
+
     ctx.textAlign = "left";
     ctx.fillStyle = "#e6e8ec";
     ctx.font = `bold 14.5px ${fontStack}`;
     ctx.fillText(item.name, x + 16, ry + 26);
 
-    const adjStr = formatHeadcount(item.min, item.max);
+    const adjStr = `${item.min}-${item.max}`;
     ctx.textAlign = "right";
     if (item.isModified) {
       ctx.fillStyle = "#f0b866";
-      ctx.font = `bold 13.5px ${fontStack}`;
-      ctx.fillText(t("imgRowMod", adjStr, item.rawMin, item.rawMax), x + w - 16, ry + 26);
+      ctx.font = `bold 13px ${fontStack}`;
+      ctx.fillText(t("imgRowMod", adjStr, item.rawMin, item.rawMax, bShort), x + w - 16, ry + 26);
     } else {
       ctx.fillStyle = "#cbd2df";
-      ctx.font = `14px ${fontStack}`;
-      ctx.fillText(adjStr, x + w - 16, ry + 26);
+      ctx.font = `13.5px ${fontStack}`;
+      ctx.fillText(t("imgRowNorm", adjStr, bShort), x + w - 16, ry + 26);
     }
   }
 
@@ -1470,7 +1587,7 @@ function drawFactionTable(ctx, fontStack, x, y, w, maxRows, rowH, headerColor, t
   ctx.fillStyle = "#c8a252";
   ctx.font = `bold 14px ${fontStack}`;
   ctx.textAlign = "left";
-  ctx.fillText(t("imgFootLabel"), x + 16, fy + 28);
+  ctx.fillText(`${t("imgFootLabel")} (${t("slotCount", stats.slots)})`, x + 16, fy + 28);
 
   ctx.textAlign = "right";
   ctx.fillText(t("footAdjSummary", stats.min, stats.max, stats.avg.toFixed(1)), x + w - 16, fy + 28);
