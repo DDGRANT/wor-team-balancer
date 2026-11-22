@@ -560,8 +560,7 @@ function syncTableToText() {
       const lock = r.lockedFaction ? ` ${r.lockedFaction}` : "";
       return `${r.name.trim()} ${range}${lock}`;
     });
-  rosterInput.value = lines.join("
-");
+  rosterInput.value = lines.join("\n");
 }
 
 function getCleanRowsFromEntry() {
@@ -597,8 +596,7 @@ function getCleanRowsFromEntry() {
 }
 
 function parseInputText(rawText) {
-  const lines = rawText.split(/?
-/);
+  const lines = rawText.split(/\r?\n/);
   const teams = [];
   const invalidLines = [];
 
@@ -1083,8 +1081,7 @@ function copyScheduleText() {
     notices.forEach((n) => lines.push(`- ${n}`));
   }
 
-  navigator.clipboard.writeText(lines.join("
-")).then(() => {
+  navigator.clipboard.writeText(lines.join("\n")).then(() => {
     const status = document.getElementById("copyStatus");
     if (status) {
       status.textContent = t("copyDone");
