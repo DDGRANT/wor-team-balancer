@@ -1,278 +1,15 @@
-// 本地存储 Key 定义（全局唯一声明）
-const STORAGE_KEY_AUTO = "wor_balancer_autosave_v7";
-const STORAGE_KEY_PRESET = "wor_balancer_preset_v7";
-const STORAGE_KEY_LANG = "wor_balancer_lang_v7";
+// 本地存储 Key 定义
+const STORAGE_KEY_AUTO = "wor_balancer_autosave_v8";
+const STORAGE_KEY_PRESET = "wor_balancer_preset_v8";
+const STORAGE_KEY_LANG = "wor_balancer_lang_v8";
 
-// 双语同屏字典：中英双语 (zh_en) / 日英双语 (ja_en)
-const I18N = {
-  zh_en: {
-    htmlLang: "zh-CN",
-    title: "WAR OF RIGHTS · 联队人数平衡器 Team Balancer",
-    subtitle: "表格录入 · 虚报/少报修正与公示 · 分级区间配平 · 一键生成双语战报长图 | Table Entry · Audit Disclosure · Bracket Balance",
-    tabTable: "📊 表格录入 Table Entry",
-    tabText: "📝 文本批量粘贴 Bulk Paste",
-    btnSavePreset: "💾 存为常用 Save Preset",
-    btnLoadPreset: "📂 载入常用 Load Preset",
-    btnExportJson: "⬇️ 导出 Export JSON",
-    btnImportJson: "⬆️ 导入 Import JSON",
-    thRegiment: "兵团番号 Regiment Tag",
-    thMin: "申报下限 Min",
-    thMax: "申报上限 Max",
-    thAdjusted: "修正预估 & 分级 Adj & Bracket",
-    thLock: "阵营锁定 Faction Lock",
-    thAction: "操作 Action",
-    btnAddRow: "+ 添加一行 Add Row",
-    hintTable: "提示：下方“修正档案”中的兵团会自动折算并划分大/中/小型分级 | Tip: Regiments in Audit table are auto-adjusted & bracketed",
-    labelRosterInput: "批量粘贴报名文本（每行一个，自动同步至表格 Paste Roster）：",
-    hintTextFormat: "支持格式 Formats：<code>[18thVA]15-20</code>、<code>[HD] 25~30 USA</code>、<code>散人 Pubs 10</code>",
-    btnParseToTable: "📥 解析并同步到表格 Parse & Sync",
-    hintParseSync: "解析后自动切换回表格模式微调 | Auto-switches back to Table Entry",
-    strategySectionTitle: "⚖️ 配平策略 Draw / Balance Mode",
-    bracketRuleDesc: "分级规则：中位数>26=大型(2槽) >16=中型(1槽) 其余=小型(1槽) | Bracket: mid>26=Large(2), >16=Medium(1), else=Small(1)",
-    modePureTitle: "纯平衡 Pure Balance",
-    modePureDesc: "只根据人数上限和中位数平衡，不考虑战队分级 Balance by max & mid only, no brackets",
-    modeBracketTitle: "分级平衡 Bracket Balance",
-    modeBracketDesc: "先平衡人数，再平衡各级战队数，两队数量差<=2 Balance brackets, team count diff <=2",
-    modeSmallCompTitle: "小战队补偿 Small Team Comp",
-    modeSmallCompDesc: "先选出小型战队作为种子，其余分级平衡后补入 Seed small team, then bracket balance",
-    btnSample: "填入示例 Sample",
-    btnClear: "清空报名表 Clear",
-    btnBalance: "⚔️ 开始自动平衡 Auto Balance",
-    auditTitle: "⚖️ 兵团虚报 / 少报人数修正档案 Audit & Public Disclosure（公开公示 · 自动记忆）",
-    auditFormula: "公式 Formula：<strong>修正后人数 Adjusted = round(申报 Reported × 系数 Factor + 增减 Offset)</strong>。例如虚报 20% 填 <code>0.80</code>；多报 3 人填 <code>-3</code>。",
-    btnAddAudit: "+ 新增规则 Add Rule",
-    thAuditTag: "兵团番号 Regiment Tag",
-    thAuditFactor: "人数系数 Factor",
-    thAuditDelta: "固定增减 Offset",
-    thAuditReason: "公开公示说明 Public Reason",
-    usaBadge: "USA 联邦军 Union",
-    csaBadge: "CSA 邦联军 Confederate",
-    diffTitle: "双方修正后人数差值 Headcount Diff",
-    usaHeader: "USA · 联邦军 (Union)",
-    csaHeader: "CSA · 邦联军 (Confederate)",
-    resThRegiment: "兵团 Regiment",
-    resThRaw: "申报 Raw",
-    resThAdj: "修正 Adj",
-    resThBracket: "分级 Bracket",
-    resThStatus: "状态 Status",
-    tfootTotal: "合计 Total",
-    publicNoticeTitle: "📢 本次联队人数修正公开公示 Public Headcount Adjustment Disclosure",
-    btnGenImg: "🖼️ 生成双语排表长图 Generate PNG",
-    btnCopyText: "📋 复制双语群公告 Copy Roster Text",
-    modalTitle: "对战排表长图预览 Preview（右键复制或点击下载 Download）",
-    btnCloseModal: "关闭 Close ✕",
-    btnDownloadImg: "⬇️ 下载 Download PNG",
-    // 动态文本
-    activeModeLabel: (name) => `当前策略 Active Mode：${name}`,
-    teamCount: (n) => `${n} 队 Teams`,
-    bracketLarge: "大型 Large(2)",
-    bracketMedium: "中型 Medium(1)",
-    bracketSmall: "小型 Small(1)",
-    bracketShortL: "大L(2)",
-    bracketShortM: "中M(1)",
-    bracketShortS: "小S(1)",
-    slotCount: (s) => `${s} 槽 Slots`,
-    lockAuto: "自动分配 Auto",
-    lockUSA: "锁定 USA Lock",
-    lockCSA: "锁定 CSA Lock",
-    btnDelete: "删除 Del",
-    phRegiment: "如 [18thVA] 或 散人 Pubs",
-    phAuditTag: "如 [18thVA] 或 18thVA",
-    phAuditReason: "公示依据 Basis，如：近期出勤约80% / ~80% turnout",
-    emptyAuditRow: "暂无虚报/少报修正记录（所有兵团按 100% 计算）| No audit rules configured",
-    emptyResultRow: "暂无队伍分配至此阵营 | No regiments assigned",
-    statusLocked: (f) => `锁定 Lock ${f}`,
-    statusModified: "已修正 Adj",
-    statusSeed: "种子 Seed",
-    statusAuto: "自动 Auto",
-    btnSwapTo: (f) => `转 ${f} ⇄`,
-    footAdjSummary: (min, max, avg) => `${min}-${max} (均值Avg ${avg})`,
-    summarySub: (avg, rMin, rMax) => `修正均值 Avg：${avg} | 原始申报 Raw：${rMin}-${rMax}`,
-    bracketBreakdown: (l, m, s, slots) => `分级 Brackets：大L×${l} 中M×${m} 小S×${s} (${slots}槽Slots)`,
-    diffSubText: (minD, maxD) => `下限差 MinDiff ${minD} | 上限差 MaxDiff ${maxD}`,
-    avgDiffText: (avgD) => `中位均值差 MidDiff：${avgD}`,
-    teamDiffText: (tDiff, sDiff) => `队数差 TeamDiff：${tDiff} | 槽位差 SlotDiff：${sDiff}`,
-    saveEnabled: "● 已启用自动本地记忆 Auto-Save Active",
-    saveAutoDone: "● 已自动保存至本地 Auto-Saved",
-    saveRestored: "● 已恢复上次本地记忆 Restored",
-    savePresetDone: "✔ 已保存为常用名单！Preset Saved!",
-    loadPresetDone: "✔ 已载入常用名单！Preset Loaded!",
-    exportJsonDone: "✔ 已导出 JSON 备份！JSON Exported!",
-    importJsonDone: "✔ JSON 导入成功！JSON Imported!",
-    copyDone: "✔ 已复制双语战报到剪贴板！Copied!",
-    warnHeader: "以下行格式未能识别（已跳过）Unrecognized lines:",
-    warnLine: (lineNo, txt) => `第 ${lineNo} 行无法识别 Line ${lineNo}: "${txt}"`,
-    unnamedTeam: (n) => `未命名队伍#${n}`,
-    alertNoSaveData: "当前没有可保存的有效兵团数据！No valid rows to save!",
-    alertNoPreset: "尚未保存过常用名单！No preset saved yet!",
-    alertReadPresetFail: "读取常用名单失败。Failed to load preset.",
-    alertInvalidJson: "JSON 文件格式不正确。Invalid JSON file.",
-    alertNoExportData: "当前没有可导出的排表数据！No data to export!",
-    alertNoImgData: "当前没有可生成图片的排表数据！No data to render!",
-    noticeItem: (item, r, formulaStr) => {
-      const reasonStr = r.reason ? `（依据 Basis：${r.reason}）` : "";
-      return `${item.name}：申报 Raw ${item.rawMin}-${item.rawMax} → 修正 Adj ${item.min}-${item.max} [${formulaStr}]${reasonStr}`;
-    },
-    factorLabel: (f) => `系数Factor ×${f}`,
-    deltaLabel: (d) => `增减Offset ${d > 0 ? "+" + d : d}`,
-    exportTitle: "【War of Rights 联队阵营分配表 Event Faction Roster】",
-    exportModeLine: (modeName) => `⚖️ 配平策略 Balance Mode：${modeName}`,
-    exportUSA: (min, max, avg, l, m, s) => `🔵 USA 联邦军 Union [修正预估 ${min}-${max} | 均值Avg ${avg} | 大L:${l} 中M:${m} 小S:${s}]：`,
-    exportCSA: (min, max, avg, l, m, s) => `⚪ CSA 邦联军 Confederate [修正预估 ${min}-${max} | 均值Avg ${avg} | 大L:${l} 中M:${m} 小S:${s}]：`,
-    exportLineMod: (name, adj, rMin, rMax, bTag) => `• ${name} [${bTag}]：修正Adj ${adj}（原报Raw ${rMin}-${rMax}）`,
-    exportLineNorm: (name, adj, bTag) => `• ${name} [${bTag}]：${adj}`,
-    exportDiff: (minD, maxD, tDiff) => `📊 双方修正差 Diff：下限差Min ${minD} / 上限差Max ${maxD} / 队数差Teams ${tDiff}`,
-    exportNoticeHeader: "⚖️ 【人数修正公开公示 Public Adjustment Disclosure】：",
-    imgTitle: "WAR OF RIGHTS · 联队阵营人数平衡排表 EVENT ROSTER",
-    imgSubtitle: (timeStr, modeName, minD, maxD, tDiff) => `${timeStr}  |  ${modeName}  |  下限差Min:${minD} 上限差Max:${maxD} 队数差Teams:${tDiff}`,
-    imgUSATitle: "USA 联邦军",
-    imgCSATitle: "CSA 邦联军",
-    imgCardSub: (avg, rMin, rMax) => `均值Avg ${avg} | 原报Raw ${rMin}-${rMax}`,
-    imgTableTeams: (n, l, m, s) => `${n}队 (L:${l} M:${m} S:${s})`,
-    imgRowMod: (adjStr, rMin, rMax, bShort) => `[${bShort}] 修正${adjStr} (原${rMin}-${rMax})`,
-    imgRowNorm: (adjStr, bShort) => `[${bShort}] ${adjStr}`,
-    imgFootLabel: "合计 Total",
-    imgNoticeTitle: "⚖️ 本次联队人数修正公开公示 Public Adjustment Disclosure：",
-    imgFooter: "War of Rights Team Balancer · 双语智能平衡与人数修正公示系统"
-  },
-  ja_en: {
-    htmlLang: "ja",
-    title: "WAR OF RIGHTS · 連隊人数バランサー Team Balancer",
-    subtitle: "テーブル入力 · 申告人数補正と公開公示 · 規模階級バランス · 日英編成表画像出力 | Table · Audit · Bracket Balance",
-    tabTable: "📊 テーブル入力 Table Entry",
-    tabText: "📝 テキスト一括貼付 Bulk Paste",
-    btnSavePreset: "💾 定番保存 Save Preset",
-    btnLoadPreset: "📂 定番読込 Load Preset",
-    btnExportJson: "⬇️ 出力 Export JSON",
-    btnImportJson: "⬆️ 読込 Import JSON",
-    thRegiment: "連隊タグ Regiment Tag",
-    thMin: "申告下限 Min",
-    thMax: "申告上限 Max",
-    thAdjusted: "補正予測 & 階級 Adj & Bracket",
-    thLock: "陣営固定 Faction Lock",
-    thAction: "操作 Action",
-    btnAddRow: "+ 行を追加 Add Row",
-    hintTable: "ヒント：「人数補正アーカイブ」登録連隊は自動補正＆大/中/小規模に分類されます | Tip: Regiments in Audit table are auto-adjusted",
-    labelRosterInput: "参加リスト一括貼付（1行1連隊・自動同期 Paste Roster）：",
-    hintTextFormat: "対応形式 Formats：<code>[18thVA]15-20</code>、<code>[HD] 25~30 USA</code>、<code>野良 Pubs 10</code>",
-    btnParseToTable: "📥 解析してテーブルへ同期 Parse & Sync",
-    hintParseSync: "解析後にテーブル入力モードへ自動切替 | Auto-switches back to Table Entry",
-    strategySectionTitle: "⚖️ バランス方式 Draw / Balance Mode",
-    bracketRuleDesc: "階級規則：中央値>26=大型(2枠) >16=中型(1枠) 他=小型(1枠) | Bracket: mid>26=Large(2), >16=Medium(1), else=Small(1)",
-    modePureTitle: "純バランス Pure Balance",
-    modePureDesc: "人数上限と中央値のみでバランス調整（連隊規模を考慮しない）Balance by max & mid only, no brackets",
-    modeBracketTitle: "階級バランス Bracket Balance",
-    modeBracketDesc: "人数を揃えた後、各規模の連隊数を均等化（連隊数差<=2）Balance brackets, team count diff <=2",
-    modeSmallCompTitle: "小連隊補償 Small Team Comp",
-    modeSmallCompDesc: "小型連隊をシードとして先に確保し、他を階級バランス後に補充 Seed small team, then bracket balance",
-    btnSample: "サンプル Sample",
-    btnClear: "消去 Clear",
-    btnBalance: "⚔️ 自動バランス実行 Auto Balance",
-    auditTitle: "⚖️ 連隊の過大・過少申告 補正アーカイブ Audit & Public Disclosure（公開公示 · 自動保存）",
-    auditFormula: "計算式 Formula：<strong>補正後人数 Adjusted = round(申告 Reported × 係数 Factor + 増減 Offset)</strong>。例：20%過大は <code>0.80</code>、3名減は <code>-3</code>。",
-    btnAddAudit: "+ ルール追加 Add Rule",
-    thAuditTag: "連隊タグ Regiment Tag",
-    thAuditFactor: "人数係数 Factor",
-    thAuditDelta: "固定増减 Offset",
-    thAuditReason: "公開公示根拠 Public Reason",
-    usaBadge: "USA 北軍 Union",
-    csaBadge: "CSA 南軍 Confederate",
-    diffTitle: "両軍の補正後人数差 Headcount Diff",
-    usaHeader: "USA · 北軍 (Union)",
-    csaHeader: "CSA · 南軍 (Confederate)",
-    resThRegiment: "連隊 Regiment",
-    resThRaw: "申告 Raw",
-    resThAdj: "補正 Adj",
-    resThBracket: "階級 Bracket",
-    resThStatus: "状態 Status",
-    tfootTotal: "合計 Total",
-    publicNoticeTitle: "📢 本イベントの人数補正に関する公開公示 Public Headcount Adjustment Disclosure",
-    btnGenImg: "🖼️ 日英編成表画像を生成 Generate PNG",
-    btnCopyText: "📋 日英告知テキストをコピー Copy Roster Text",
-    modalTitle: "編成表画像プレビュー Preview（右クリックでコピー、または保存 Download）",
-    btnCloseModal: "閉じる Close ✕",
-    btnDownloadImg: "⬇️ 保存 Download PNG",
-    // 动态文本
-    activeModeLabel: (name) => `現在の方式 Active Mode：${name}`,
-    teamCount: (n) => `${n} 連隊 Teams`,
-    bracketLarge: "大型 Large(2)",
-    bracketMedium: "中型 Medium(1)",
-    bracketSmall: "小型 Small(1)",
-    bracketShortL: "大L(2)",
-    bracketShortM: "中M(1)",
-    bracketShortS: "小S(1)",
-    slotCount: (s) => `${s} 枠 Slots`,
-    lockAuto: "自動振分 Auto",
-    lockUSA: "USA 固定 Lock",
-    lockCSA: "CSA 固定 Lock",
-    btnDelete: "削除 Del",
-    phRegiment: "例: [18thVA] / 野良 Pubs",
-    phAuditTag: "例: [18thVA] / 18thVA",
-    phAuditReason: "公示根拠 Basis（例：直近出席率約80% / ~80% turnout）",
-    emptyAuditRow: "人数補正ルールはありません（全連隊100%計算）| No audit rules configured",
-    emptyResultRow: "この陣営に割り当てられた連隊はありません | No regiments assigned",
-    statusLocked: (f) => `${f} 固定 Lock`,
-    statusModified: "補正済 Adj",
-    statusSeed: "シード Seed",
-    statusAuto: "自動 Auto",
-    btnSwapTo: (f) => `${f} へ ⇄`,
-    footAdjSummary: (min, max, avg) => `${min}-${max} (平均Avg ${avg})`,
-    summarySub: (avg, rMin, rMax) => `補正平均 Avg：${avg} | 元申告 Raw：${rMin}-${rMax}`,
-    bracketBreakdown: (l, m, s, slots) => `階級 Brackets：大L×${l} 中M×${m} 小S×${s} (${slots}枠Slots)`,
-    diffSubText: (minD, maxD) => `下限差 MinDiff ${minD} | 上限差 MaxDiff ${maxD}`,
-    avgDiffText: (avgD) => `中央平均差 MidDiff：${avgD}`,
-    teamDiffText: (tDiff, sDiff) => `連隊数差 TeamDiff：${tDiff} | 枠数差 SlotDiff：${sDiff}`,
-    saveEnabled: "● ローカル自動保存 有効 Auto-Save Active",
-    saveAutoDone: "● 自動保存完了 Auto-Saved",
-    saveRestored: "● 前回データを復元 Restored",
-    savePresetDone: "✔ 定番リスト保存完了！Preset Saved!",
-    loadPresetDone: "✔ 定番リスト読込完了！Preset Loaded!",
-    exportJsonDone: "✔ JSON出力完了！JSON Exported!",
-    importJsonDone: "✔ JSON読込完了！JSON Imported!",
-    copyDone: "✔ 日英告知テキストをコピーしました！Copied!",
-    warnHeader: "認識できなかった行（スキップ）Unrecognized lines:",
-    warnLine: (lineNo, txt) => `${lineNo} 行目エラー Line ${lineNo}: "${txt}"`,
-    unnamedTeam: (n) => `名称未設定#${n}`,
-    alertNoSaveData: "保存できる有効なデータがありません！No valid rows to save!",
-    alertNoPreset: "定番リストがまだ保存されていません！No preset saved yet!",
-    alertReadPresetFail: "定番リストの読み込みに失敗しました。Failed to load preset.",
-    alertInvalidJson: "JSONファイルの形式が正しくありません。Invalid JSON file.",
-    alertNoExportData: "出力する編成データがありません！No data to export!",
-    alertNoImgData: "画像を生成するデータがありません！No data to render!",
-    noticeItem: (item, r, formulaStr) => {
-      const reasonStr = r.reason ? `（根拠 Basis：${r.reason}）` : "";
-      return `${item.name}：申告 Raw ${item.rawMin}-${item.rawMax} → 補正 Adj ${item.min}-${item.max} [${formulaStr}]${reasonStr}`;
-    },
-    factorLabel: (f) => `係数Factor ×${f}`,
-    deltaLabel: (d) => `増減Offset ${d > 0 ? "+" + d : d}`,
-    exportTitle: "【War of Rights 連隊陣営編成表 Event Faction Roster】",
-    exportModeLine: (modeName) => `⚖️ バランス方式 Balance Mode：${modeName}`,
-    exportUSA: (min, max, avg, l, m, s) => `🔵 USA 北軍 Union [補正予測 ${min}-${max} | 平均Avg ${avg} | 大L:${l} 中M:${m} 小S:${s}]：`,
-    exportCSA: (min, max, avg, l, m, s) => `⚪ CSA 南軍 Confederate [補正予測 ${min}-${max} | 平均Avg ${avg} | 大L:${l} 中M:${m} 小S:${s}]：`,
-    exportLineMod: (name, adj, rMin, rMax, bTag) => `• ${name} [${bTag}]：補正Adj ${adj}（元申告Raw ${rMin}-${rMax}）`,
-    exportLineNorm: (name, adj, bTag) => `• ${name} [${bTag}]：${adj}`,
-    exportDiff: (minD, maxD, tDiff) => `📊 両軍補正差 Diff：下限差Min ${minD} / 上限差Max ${maxD} / 連隊差Teams ${tDiff}`,
-    exportNoticeHeader: "⚖️ 【人数補正に関する公開公示 Public Adjustment Disclosure】：",
-    imgTitle: "WAR OF RIGHTS · 連隊陣営人数バランス編成表 EVENT ROSTER",
-    imgSubtitle: (timeStr, modeName, minD, maxD, tDiff) => `${timeStr}  |  ${modeName}  |  下限差Min:${minD} 上限差Max:${maxD} 連隊差Teams:${tDiff}`,
-    imgUSATitle: "USA 北軍",
-    imgCSATitle: "CSA 南軍",
-    imgCardSub: (avg, rMin, rMax) => `平均Avg ${avg} | 元申告Raw ${rMin}-${rMax}`,
-    imgTableTeams: (n, l, m, s) => `${n}連隊 (L:${l} M:${m} S:${s})`,
-    imgRowMod: (adjStr, rMin, rMax, bShort) => `[${bShort}] 補正${adjStr} (元${rMin}-${rMax})`,
-    imgRowNorm: (adjStr, bShort) => `[${bShort}] ${adjStr}`,
-    imgFootLabel: "合計 Total",
-    imgNoticeTitle: "⚖️ 本イベントの人数補正に関する公開公示 Public Adjustment Disclosure：",
-    imgFooter: "War of Rights Team Balancer · 日英自動バランス・人数修正公示システム"
-  }
-};
-
-// 当前双语模式状态 ("zh_en" 或 "ja_en")
-let currentLang = localStorage.getItem(STORAGE_KEY_LANG) || "zh_en";
-if (!I18N[currentLang]) currentLang = "zh_en";
+// 兼容旧版语言 key 并默认设为简中英 (zh_cn_en)
+let currentLang = localStorage.getItem(STORAGE_KEY_LANG) || "zh_cn_en";
+if (currentLang === "zh_en") currentLang = "zh_cn_en";
+if (!window.I18N || !window.I18N[currentLang]) currentLang = "zh_cn_en";
 
 function t(key, ...args) {
-  const dict = I18N[currentLang] || I18N.zh_en;
+  const dict = (window.I18N && window.I18N[currentLang]) || (window.I18N && window.I18N.zh_cn_en) || {};
   const val = dict[key];
   if (typeof val === "function") return val(...args);
   return val !== undefined ? val : key;
@@ -308,7 +45,7 @@ function bindLanguageButtons() {
   document.querySelectorAll(".lang-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const lang = btn.getAttribute("data-lang");
-      if (lang && I18N[lang]) {
+      if (lang && window.I18N && window.I18N[lang]) {
         applyLanguage(lang, true);
       }
     });
@@ -487,7 +224,7 @@ document.getElementById("loadPresetBtn").addEventListener("click", () => {
 // 导出 JSON 配置文件
 document.getElementById("exportJsonBtn").addEventListener("click", () => {
   const backupData = {
-    version: "WoR-Balancer-v7",
+    version: "WoR-Balancer-v8",
     exportedAt: new Date().toISOString(),
     balanceMode: currentMode,
     entryRows,
@@ -544,9 +281,8 @@ importJsonInput.addEventListener("change", (e) => {
   reader.readAsText(file);
 });
 
-// 填入示例数据（以 [18thVA] 为首）
+// 填入示例数据
 document.getElementById("sampleBtn").addEventListener("click", () => {
-  const pubsName = currentLang === "ja_en" ? "野良 Pubs" : "散人 Pubs";
   entryRows = [
     { id: genId(), name: "[18thVA]", min: 15, max: 20, lockedFaction: null },
     { id: genId(), name: "[HD]", min: 26, max: 32, lockedFaction: null },
@@ -555,20 +291,13 @@ document.getElementById("sampleBtn").addEventListener("click", () => {
     { id: genId(), name: "[4thVA]", min: 10, max: 14, lockedFaction: "CSA" },
     { id: genId(), name: "[20thME]", min: 14, max: 18, lockedFaction: "USA" },
     { id: genId(), name: "[9thNY]", min: 8, max: 10, lockedFaction: null },
-    { id: genId(), name: pubsName, min: 10, max: 14, lockedFaction: null }
+    { id: genId(), name: t("samplePubsName"), min: 10, max: 14, lockedFaction: null }
   ];
 
   if (auditRules.length === 0) {
-    const r1 = currentLang === "ja_en"
-      ? "直近3回の出席率約80% / ~80% average turnout"
-      : "近三次联队实际到场率约 80% / ~80% average turnout";
-    const r2 = currentLang === "ja_en"
-      ? "控えめな申告で実際は+3名 / Usually +3 extra players"
-      : "保守少报倾向，实际多到约 3 人 / Usually +3 extra players";
-
     auditRules = [
-      { id: genId(), tag: "[69thNY]", factor: 0.8, delta: 0, reason: r1 },
-      { id: genId(), tag: "[9thNY]", factor: 1.0, delta: 3, reason: r2 }
+      { id: genId(), tag: "[69thNY]", factor: 0.8, delta: 0, reason: t("sampleReason1") },
+      { id: genId(), tag: "[9thNY]", factor: 1.0, delta: 3, reason: t("sampleReason2") }
     ];
   }
 
@@ -657,7 +386,7 @@ function applyAuditToTeam(rawMin, rawMax, rule) {
 }
 
 /**
- * 分级规则（依据参考图）：
+ * 分级规则：
  * 中位数 > 26 = 大型 (2槽)
  * 中位数 > 16 = 中型 (1槽)
  * 其余 <= 16  = 小型 (1槽)
@@ -967,7 +696,6 @@ function balanceTeams(teams, mode = "pure") {
   if (mode === "small_comp") {
     const smallFree = freeTeams.filter((tItem) => tItem.bracket === "S");
     const nonSmallFree = freeTeams.filter((tItem) => tItem.bracket !== "S");
-    // 选取最多 2 支小型战队作为补偿种子（优先保留至少 1 支做尾差补偿）
     if (smallFree.length > 0) {
       smallFree.sort((a, b) => a.avg - b.avg);
       const seedCount = Math.min(2, smallFree.length);
@@ -989,7 +717,6 @@ function balanceTeams(teams, mode = "pure") {
       const uCount = resUSA.length;
       const cCount = resCSA.length;
 
-      // 优先补入人数少的一侧；若人数接近但一侧队伍已多出 2 支，则补入队伍少的一侧
       if (uCount - cCount >= 2) {
         resCSA.push(seed);
       } else if (cCount - uCount >= 2) {
@@ -1017,11 +744,9 @@ function solvePartition(fixedUSA, fixedCSA, freeTeams, mode) {
     const diffMin = Math.abs(uMin - cMin);
 
     if (mode === "pure") {
-      // 纯平衡：只根据人数上限和中位数平衡，不考虑战队分级
       return diffAvg * 10 + diffMax * 6 + diffMin * 1;
     }
 
-    // 分级平衡 / 小战队补偿主体：先平衡人数，再平衡各级战队数，两队数量差 <= 2
     const teamDiff = Math.abs(uCnt - cCnt);
     const teamCapPenalty = teamDiff > 2 ? (teamDiff - 2) * 5000 : 0;
     const bracketDiffPenalty =
@@ -1055,7 +780,6 @@ function solvePartition(fixedUSA, fixedCSA, freeTeams, mode) {
       const addM = item.bracket === "M" ? 1 : 0;
       const addS = item.bracket === "S" ? 1 : 0;
 
-      // 放入 USA
       dfs(
         idx + 1,
         uMin + item.min, uMax + item.max, uAvg + item.avg, uCnt + 1, uL + addL, uM + addM, uS + addS,
@@ -1063,12 +787,10 @@ function solvePartition(fixedUSA, fixedCSA, freeTeams, mode) {
         mask | (1 << idx)
       );
 
-      // 无固定队伍时对称去重
       if (idx === 0 && fixedUSA.length === 0 && fixedCSA.length === 0) {
         return;
       }
 
-      // 放入 CSA
       dfs(
         idx + 1,
         uMin, uMax, uAvg, uCnt, uL, uM, uS,
@@ -1089,7 +811,6 @@ function solvePartition(fixedUSA, fixedCSA, freeTeams, mode) {
       else bestCSA.push(item);
     });
   } else {
-    // 超过 20 支队伍时的兜底贪心
     let u = { ...baseU, cnt: fixedUSA.length };
     let c = { ...baseC, cnt: fixedCSA.length };
 
@@ -1447,8 +1168,7 @@ function generateScheduleImage() {
 
   ctx.fillStyle = "#9aa3b2";
   ctx.font = `13.5px ${fontStack}`;
-  const localeMap = { zh_en: "zh-CN", ja_en: "ja-JP" };
-  const timeStr = new Date().toLocaleString(localeMap[currentLang] || "zh-CN", { hour12: false });
+  const timeStr = new Date().toLocaleString(t("localeCode") || "zh-CN", { hour12: false });
   const minDiff = Math.abs(uStats.min - cStats.min);
   const maxDiff = Math.abs(uStats.max - cStats.max);
   const teamDiff = Math.abs(currentState.usa.length - currentState.csa.length);
