@@ -33,22 +33,22 @@ body {
 }
 
 .container {
-  max-width: 1240px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
 .header {
   position: relative;
   text-align: center;
-  padding: 16px 0 22px;
+  padding: 14px 0 20px;
   border-bottom: 1px solid var(--border-color);
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .lang-switcher {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
@@ -56,9 +56,9 @@ body {
   background: #1a1f27;
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 0.82rem;
+  border-radius: 5px;
+  padding: 5px 12px;
+  font-size: 0.84rem;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -69,22 +69,22 @@ body {
 }
 
 .lang-btn.active {
-  background: rgba(200, 162, 82, 0.18);
+  background: rgba(200, 162, 82, 0.2);
   color: var(--gold-accent);
   border-color: var(--gold-accent);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .header h1 {
   color: var(--gold-accent);
-  letter-spacing: 1.5px;
-  font-size: 1.8rem;
+  letter-spacing: 1.2px;
+  font-size: 1.72rem;
   margin-bottom: 6px;
 }
 
 .subtitle {
   color: var(--text-muted);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 /* 输入控制区 */
@@ -92,7 +92,7 @@ body {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 20px;
+  padding: 18px 20px;
   margin-bottom: 20px;
 }
 
@@ -118,7 +118,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 7px 14px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -154,7 +154,7 @@ body {
   border: 1px solid #444e5e;
   border-radius: 4px;
   padding: 5px 10px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   cursor: pointer;
 }
 
@@ -173,7 +173,7 @@ body {
 }
 
 .audit-table-wrapper {
-  max-height: 240px;
+  max-height: 230px;
 }
 
 .entry-table {
@@ -187,7 +187,7 @@ body {
   z-index: 2;
   background: #1a1f27;
   color: var(--gold-accent);
-  font-size: 0.84rem;
+  font-size: 0.83rem;
   padding: 10px 12px;
   border-bottom: 1px solid var(--border-color);
 }
@@ -215,7 +215,7 @@ body {
 }
 
 .adj-preview {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: var(--text-muted);
 }
 
@@ -224,13 +224,40 @@ body {
   font-weight: 600;
 }
 
+.bracket-pill {
+  display: inline-block;
+  font-size: 0.74rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+.bracket-large {
+  background: rgba(217, 83, 79, 0.2);
+  color: #f28b82;
+  border: 1px solid rgba(217, 83, 79, 0.45);
+}
+
+.bracket-medium {
+  background: rgba(91, 155, 213, 0.2);
+  color: #8ab4f8;
+  border: 1px solid rgba(91, 155, 213, 0.45);
+}
+
+.bracket-small {
+  background: rgba(111, 208, 140, 0.16);
+  color: #81c995;
+  border: 1px solid rgba(111, 208, 140, 0.35);
+}
+
 .del-row-btn {
   background: transparent;
   color: #e06c75;
   border: 1px solid rgba(224, 108, 117, 0.35);
   border-radius: 4px;
   padding: 4px 10px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   cursor: pointer;
 }
 
@@ -245,6 +272,89 @@ body {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 10px;
+}
+
+/* 策略选择卡片区 */
+.strategy-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.strategy-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.strategy-title {
+  font-weight: 700;
+  font-size: 0.96rem;
+  color: var(--text-main);
+}
+
+.bracket-rule-badge {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: #151920;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid #2d3542;
+}
+
+.strategy-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.strategy-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #171b22;
+  border: 1.5px solid #2e3644;
+  border-radius: 8px;
+  padding: 13px 14px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.strategy-card:hover {
+  border-color: #6b5b36;
+  background: #1c212a;
+}
+
+.strategy-card.active {
+  border-color: var(--gold-accent);
+  background: rgba(200, 162, 82, 0.12);
+  box-shadow: 0 0 0 1px rgba(200, 162, 82, 0.25);
+}
+
+.strategy-icon {
+  font-size: 1.45rem;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.strategy-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.strategy-card.active .strategy-name {
+  color: var(--gold-accent);
+}
+
+.strategy-desc {
+  font-size: 0.81rem;
+  color: var(--text-muted);
+  line-height: 1.42;
 }
 
 /* 修正档案面板 */
@@ -263,7 +373,7 @@ body {
 
 .audit-header h3 {
   color: var(--gold-accent);
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   margin-bottom: 4px;
 }
 
@@ -283,7 +393,7 @@ body {
 }
 
 .hint {
-  font-size: 0.84rem;
+  font-size: 0.83rem;
   color: var(--text-muted);
 }
 
@@ -323,20 +433,14 @@ textarea:focus {
   border-top: 1px solid var(--border-color);
 }
 
-.mode-select {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.92rem;
-}
-
-select {
-  background: var(--bg-input);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
+.active-mode-pill {
+  font-size: 0.85rem;
+  color: var(--gold-accent);
+  background: rgba(200, 162, 82, 0.12);
+  border: 1px solid rgba(200, 162, 82, 0.35);
+  padding: 5px 12px;
   border-radius: 5px;
-  padding: 7px 10px;
-  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .btn-group {
@@ -349,7 +453,7 @@ select {
   border: none;
   border-radius: 5px;
   padding: 8px 16px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
@@ -422,7 +526,7 @@ select {
 .summary-card {
   background: var(--bg-panel);
   border-radius: 8px;
-  padding: 16px 20px;
+  padding: 15px 18px;
   text-align: center;
 }
 
@@ -456,7 +560,7 @@ select {
 }
 
 .stat-main {
-  font-size: 1.65rem;
+  font-size: 1.6rem;
   font-weight: 700;
   margin: 4px 0;
 }
@@ -470,33 +574,40 @@ select {
 }
 
 .stat-sub {
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   color: var(--text-muted);
+}
+
+.stat-brackets {
+  font-size: 0.8rem;
+  color: #c4cbd6;
+  margin-top: 4px;
 }
 
 .summary-diff {
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 14px 20px;
+  padding: 14px 18px;
   text-align: center;
 }
 
 .diff-title {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
 }
 
 .diff-value {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--gold-accent);
   margin: 4px 0;
 }
 
 .diff-sub {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
+  margin-top: 2px;
 }
 
 /* 左右结果表格区 */
@@ -532,12 +643,12 @@ select {
 }
 
 .panel-header h2 {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   color: #fff;
 }
 
 .count-tag {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   background: rgba(0, 0, 0, 0.28);
   padding: 2px 8px;
   border-radius: 4px;
@@ -551,11 +662,11 @@ select {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 th, td {
-  padding: 10px 12px;
+  padding: 9px 10px;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
 }
@@ -564,7 +675,7 @@ th {
   background: #181c23;
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
 }
 
 tbody tr:hover {
@@ -576,6 +687,7 @@ tfoot td {
   border-top: 2px solid var(--border-color);
   border-bottom: none;
   color: var(--gold-accent);
+  font-size: 0.86rem;
 }
 
 .empty-row td {
@@ -586,7 +698,7 @@ tfoot td {
 
 .tag-lock {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   padding: 1px 6px;
   border-radius: 3px;
   background: rgba(200, 162, 82, 0.2);
@@ -596,7 +708,7 @@ tfoot td {
 
 .tag-audit {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   padding: 1px 6px;
   border-radius: 3px;
   background: rgba(240, 184, 102, 0.16);
@@ -604,8 +716,18 @@ tfoot td {
   border: 1px solid rgba(240, 184, 102, 0.35);
 }
 
+.tag-seed {
+  display: inline-block;
+  font-size: 0.74rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(111, 208, 140, 0.16);
+  color: #81c995;
+  border: 1px solid rgba(111, 208, 140, 0.35);
+}
+
 .tag-auto {
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
@@ -615,7 +737,7 @@ tfoot td {
   border: 1px solid #444f61;
   border-radius: 4px;
   padding: 3px 8px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   cursor: pointer;
 }
 
@@ -638,7 +760,7 @@ tfoot td {
   font-weight: 700;
   color: var(--gold-accent);
   margin-bottom: 8px;
-  font-size: 0.96rem;
+  font-size: 0.94rem;
 }
 
 .notice-list {
@@ -646,7 +768,7 @@ tfoot td {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   color: #e6e8ec;
 }
 
@@ -682,7 +804,7 @@ tfoot td {
   background: var(--bg-panel);
   border: 1px solid var(--gold-accent);
   border-radius: 8px;
-  max-width: 960px;
+  max-width: 980px;
   width: 100%;
   max-height: 90vh;
   display: flex;
@@ -699,7 +821,7 @@ tfoot td {
 }
 
 .modal-header h3 {
-  font-size: 1rem;
+  font-size: 0.98rem;
   color: var(--gold-accent);
 }
 
@@ -723,7 +845,10 @@ tfoot td {
   text-align: right;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 960px) {
+  .strategy-cards {
+    grid-template-columns: 1fr;
+  }
   .summary-bar {
     grid-template-columns: 1fr;
   }
