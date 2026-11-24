@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>War of Rights Map Draw · 联队地图抽取</title>
+  <link rel="stylesheet" href="style.css?v=14" />
+  <style>
+    .mode-selector-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .anim-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .anim-card {
+      background: #161a22;
+      border: 1.5px solid #2e3644;
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+    .anim-card:hover { border-color: #6b5b36; background: #1c212a; }
+    .anim-card.active {
+      border-color: var(--gold-accent);
+      background: rgba(200, 162, 82, 0.16);
+      color: var(--gold-accent);
+      box-shadow: 0 0 0 1px rgba(200, 162, 82, 0.3);
+    }
+    .anim-icon { font-size: 1.5rem; margin-bottom: 4px; }
+    .anim-name { font-weight: 700; font-size: 0.86rem; }
+    .anim-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* 动画舞台区域 */
+    .stage-panel {
+      background: #11151b;
+      border: 2px solid #323a46;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .stage-panel.active-glow { border-color: var(--gold-accent); }
+
+    /* 1. 最简易滚动框 */
+    .simple-ticker {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gold-accent);
+      padding: 28px 36px;
+      border: 2px dashed rgba(200, 162, 82, 0.45);
+      border-radius: 10px;
+      background: #181d26;
+      min-width: 340px;
+      max-width: 95%;
+    }
+
+    /* 2. 刮刮乐彩票容器 */
+    .scratch-wrapper {
+      position: relative;
+      width: 460px;
+      max-width: 95vw;
+      height: 200px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 3px solid var(--gold-accent);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      user-select: none;
+    }
+    .scratch-underneath {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #1e2736, #141922);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    #scratchCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    /* 通用 Canvas 舞台 (大转盘 / 柏青哥 / 六合彩 / 赛马) */
+    #animCanvas {
+      max-width: 100%;
+      border-radius: 8px;
+      background: #0d1016;
+      border: 1px solid #2c3545;
+      display: block;
+    }
+
+    .history-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .history-chip {
+      background: #232934;
+      border: 1px solid #3c4556;
+      color: #e6e8ec;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .history-chip button {
+      background: transparent;
+      border: none;
+      color: #81c995;
+      cursor: pointer;
+      font-size: 0.78rem;
+      text-decoration: underline;
+    }
+
+    /* Inspector Modal 样式复用 */
+    .map-inspector-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; text-align: left; }
+    .map-preview-frame { background: #0d1015; border: 1px solid #323a46; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+    .map-preview-frame img { width: 100%; height: auto; display: block; cursor: zoom-in; }
+    .img-thumbs-bar { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 10px; background: #13171e; border-top: 1px solid #262d38; }
+    .thumb-pill { background: #1e242e; color: #cbd2df; border: 1px solid #384152; border-radius: 4px; padding: 3px 8px; font-size: 0.76rem; cursor: pointer; }
+    .thumb-pill.active { border-color: var(--gold-accent); color: var(--gold-accent); font-weight: 700; }
+    .map-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; margin-bottom: 12px; }
+    .stat-tile { background: #14181f; border: 1px solid #2c3442; border-radius: 6px; padding: 8px 11px; }
+    .stat-tile-label { font-size: 0.76rem; color: var(--text-muted); }
+    .stat-tile-val { font-size: 1.05rem; font-weight: 700; color: var(--gold-accent); margin-top: 2px; }
+    .oob-scroll { max-height: 310px; overflow-y: auto; padding-right: 4px; }
+    .branch-title { font-size: 0.78rem; color: var(--gold-accent); font-weight: 700; margin: 8px 0 4px; text-transform: uppercase; }
+    .weapon-sub { font-size: 0.75rem; color: #8f99ab; margin-left: 12px; margin-bottom: 4px; }
+    .pool-badge { display: inline-block; font-size: 0.72rem; background: rgba(91, 155, 213, 0.2); color: #8ab4f8; border: 1px solid rgba(91, 155, 213, 0.4); padding: 0 5px; border-radius: 3px; margin-left: 4px; }
+
+    @media (max-width: 960px) {
+      .anim-grid { grid-template-columns: repeat(3, 1fr); }
+      .mode-selector-grid-5 { grid-template-columns: repeat(2, 1fr); }
+      .map-inspector-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .anim-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="top-nav">
+      <div class="nav-links">
+        <a href="index.html" class="nav-link" data-i18n="navBalancer">⚔️ 队伍人数平衡 Team Balancer</a>
+        <a href="draw.html" class="nav-link active" data-i18n="navDraw">🎲 地图抽取 Map Draw</a>
+        <a href="maps.html" class="nav-link" data-i18n="navMaps">🗺️ 地图池管理 Map Pool</a>
+      </div>
+      <div class="lang-switcher">
+        <button type="button" class="lang-btn active" data-lang="zh_cn_en">简中英 CN / EN</button>
+        <button type="button" class="lang-btn" data-lang="zh_tw_en">繁中英 TW / EN</button>
+        <button type="button" class="lang-btn" data-lang="ja_en">日英 JA / EN</button>
+      </div>
+    </nav>
+
+    <header class="header">
+      <h1>WAR OF RIGHTS · 联队地图抽取仪式 Map Draw</h1>
+      <p class="subtitle">支持 6 种趣味抽取动画 · 原则上每次抽出的地图自动移出池外（不放回抽取）· 可随时前往“地图池管理”调整</p>
+    </header>
+
+    <!-- 1. 模式筛选与抽取动画选择 -->
+    <section class="control-panel">
+      <div class="panel-top-bar">
+        <span class="strategy-title">1. 选择模式与战役范围 Select Mode & Campaign</span>
+        <div class="memory-bar">
+          <span id="drawPoolStatus" class="save-indicator">当前可用池: 0 / 0</span>
+          <a href="maps.html" class="btn btn-outline-sm">⚙️ 管理地图池 Manage Pool →</a>
+        </div>
+      </div>
+
+      <div class="mode-selector-grid-5" id="modeSelectorGrid">
+        <div class="mode-pill-card active" data-mode="skirmish" tabindex="0">
+          <div class="mode-pill-title">Skirmish</div>
+          <div class="mode-pill-count" id="count_skirmish">0 / 0</div>
+        </div>
+        <div class="mode-pill-card" data-mode="conquest" tabindex="0">
+          <div class="mode-pill-title">Conquest</div>
+          <div class="mode-pill-count" id="count_conquest">0 / 0</div>
+        </div>
+        <div class="mode-pill-card" data-mode="picket_patrol" tabindex="0">
+          <div class="mode-pill-title">Picket Patrol</div>
+          <div class="mode-pill-count" id="count_picket_patrol">0 / 0</div>
+        </div>
+        <div class="mode-pill-card" data-mode="onslaught" tabindex="0">
+          <div class="mode-pill-title">Onslaught</div>
+          <div class="mode-pill-count" id="count_onslaught">0 / 0</div>
+        </div>
+        <div class="mode-pill-card" data-mode="drill_camp" tabindex="0">
+          <div class="mode-pill-title">Drill Camp</div>
+          <div class="mode-pill-count" id="count_drill_camp">0 / 0</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="campaign-filters" id="campaignFilters">
+          <button type="button" class="camp-btn active" data-camp="ALL">全部战役 All</button>
+          <button type="button" class="camp-btn" data-camp="antietam">Antietam</button>
+          <button type="button" class="camp-btn" data-camp="harpers-ferry">Harpers Ferry</button>
+          <button type="button" class="camp-btn" data-camp="south-mountain">South Mountain</button>
+          <button type="button" class="camp-btn" data-camp="drill-camp">Drill Camp</button>
+          <button type="button" class="camp-btn" data-camp="onslaught">Onslaught</button>
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.86rem; color:var(--gold-accent); cursor:pointer;">
+          <input type="checkbox" id="noReplacementChk" checked style="width:16px; height:16px;" />
+          <span>不放回抽取（抽中后自动移出抽取池）No-Replacement</span>
+        </label>
+      </div>
+
+      <!-- 2. 选择抽取动画方式 -->
+      <div class="strategy-section">
+        <div class="strategy-header-row">
+          <span class="strategy-title">2. 选择抽取动画方式 Select Draw Animation</span>
+        </div>
+
+        <div class="anim-grid" id="animSelectorGrid">
+          <div class="anim-card active" data-anim="simple" tabindex="0">
+            <div class="anim-icon">⚡</div>
+            <div class="anim-name">最简易滚动</div>
+            <div class="anim-sub">Simple Roll</div>
+          </div>
+          <div class="anim-card" data-anim="scratch" tabindex="0">
+            <div class="anim-icon">🎫</div>
+            <div class="anim-name">刮刮乐彩票</div>
+            <div class="anim-sub">Scratch Card</div>
+          </div>
+          <div class="anim-card" data-anim="wheel" tabindex="0">
+            <div class="anim-icon">🎡</div>
+            <div class="anim-name">幸运大转盘</div>
+            <div class="anim-sub">Spin Wheel</div>
+          </div>
+          <div class="anim-card" data-anim="pachinko" tabindex="0">
+            <div class="anim-icon">🎰</div>
+            <div class="anim-name">柏青哥弹珠</div>
+            <div class="anim-sub">Pachinko</div>
+          </div>
+          <div class="anim-card" data-anim="lottery" tabindex="0">
+            <div class="anim-icon">🎱</div>
+            <div class="anim-name">六合彩出彩球</div>
+            <div class="anim-sub">Lottery Balls</div>
+          </div>
+          <div class="anim-card" data-anim="horserace" tabindex="0">
+            <div class="anim-icon">🏇</div>
+            <div class="anim-name">西部赛马</div>
+            <div class="anim-sub">Horse Race</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <span class="hint" id="animHintText">点击右侧按钮开始抽取，抽出后将自动从未打地图池中移除</span>
+        <div class="btn-group">
+          <button id="startDrawBtn" class="btn btn-primary" type="button" style="padding: 10px 26px; font-size: 1rem;">🎲 开始抽取 Start Draw</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 动画演示舞台区 -->
+    <section class="stage-panel" id="stagePanel">
+      <div id="stagePlaceholder" class="hint" style="font-size: 0.95rem;">
+        请选择上方模式与抽取动画，点击 <strong>“🎲 开始抽取 Start Draw”</strong>
+      </div>
+
+      <!-- 动画 1: 最简易滚动 -->
+      <div id="simpleStage" class="hidden">
+        <div class="simple-ticker" id="simpleTickerText">READY</div>
+      </div>
+
+      <!-- 动画 2: 刮刮乐彩票 -->
+      <div id="scratchStage" class="hidden">
+        <p class="hint" style="margin-bottom: 10px; color: var(--gold-accent);">🪙 请按住鼠标左键（或手指滑动）刮开下方银色涂层！刮开超过 45% 自动揭晓结果</p>
+        <div class="scratch-wrapper">
+          <div class="scratch-underneath">
+            <div style="font-size: 0.85rem; color: var(--text-muted);" id="scratchCampText">-</div>
+            <div style="font-size: 1.55rem; font-weight: 800; color: var(--gold-accent); margin: 4px 0;" id="scratchMapText">-</div>
+            <div style="font-size: 0.85rem; color: #8ab4f8;" id="scratchStatsText">-</div>
+          </div>
+          <canvas id="scratchCanvas" width="460" height="200"></canvas>
+        </div>
+        <button id="revealScratchNowBtn" type="button" class="btn btn-outline-sm" style="margin-top: 10px;">✨ 直接全部刮开 Reveal All</button>
+      </div>
+
+      <!-- 动画 3~6: 大转盘 / 柏青哥 / 六合彩 / 赛马 共用高清 Canvas -->
+      <div id="canvasStage" class="hidden" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <canvas id="animCanvas" width="880" height="440"></canvas>
+        <div id="canvasStatusText" class="hint" style="margin-top: 8px; color: var(--gold-accent); font-weight: 600;"></div>
+      </div>
+    </section>
+
+    <!-- 4. 抽中结果揭晓卡片 -->
+    <section id="drawResultBox" class="draw-result-box hidden">
+      <div class="draw-result-header">
+        <div>
+          <span class="faction-badge usa-badge">🎯 本次抽中地图 SELECTED MAP（已自动移出抽取池）</span>
+          <div class="drawn-map-title" id="drawnMapName">-</div>
+        </div>
+        <div class="drawn-meta-tags">
+          <span class="meta-tag" id="drawnCampTag">Campaign: -</span>
+          <span class="meta-tag" id="drawnRoleTag">Attacker / Defender: -</span>
+          <span class="meta-tag" id="drawnSlotsTag">Units: -</span>
+          <span class="meta-tag" id="drawnFinalPushTag" style="color: var(--gold-accent);">Final Push: -</span>
+          <button id="openDrawnInspectorBtn" class="btn btn-primary" type="button">🔍 打开地图详情小窗 Inspect Map</button>
+        </div>
+      </div>
+
+      <div class="tickets-compare-bar">
+        <div class="ticket-box ticket-usa">
+          <span>USA 初始票数 Tickets</span>
+          <span class="ticket-num" id="drawnUsaTickets">-</span>
+        </div>
+        <div class="ticket-box ticket-csa">
+          <span>CSA 初始票数 Tickets</span>
+          <span class="ticket-num" id="drawnCsaTickets">-</span>
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-top: 10px; padding-top: 10px;">
+        <button id="putBackDrawnBtn" class="btn btn-secondary" type="button">↩️ 误抽？放回抽取池 Put Back to Pool</button>
+        <div class="btn-group">
+          <button id="copyDrawResultBtn" class="btn btn-gold" type="button">📋 复制抽图结果群公告 Copy Result</button>
+          <span id="mapCopyStatus" class="copy-status"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 本次不放回已抽出地图记录 -->
+    <section id="historyPanel" class="public-notice hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div class="notice-title" style="margin-bottom:0;">📜 已抽出（不放回移出池外）地图记录 Drawn History</div>
+        <button id="restoreAllHistoryBtn" type="button" class="btn btn-outline-sm">🔄 全部放回池中 Reset Drawn History</button>
+      </div>
+      <div class="history-chips" id="historyChips"></div>
+    </section>
+
+    <!-- 地图详情检视弹窗 -->
+    <div id="mapInspectorModal" class="modal hidden">
+      <div class="modal-content" style="max-width: 1120px;">
+        <div class="modal-header">
+          <h3 id="inspectorTitle">🗺️ 地图战术与编制详情 Map Inspector</h3>
+          <button id="closeInspectorBtn" class="btn btn-secondary" type="button">关闭 Close ✕</button>
+        </div>
+        <div class="modal-body" style="background: #14171c;">
+          <div class="map-inspector-grid">
+            <div class="map-preview-frame">
+              <div id="inspectorImageContainer"></div>
+              <div id="inspectorThumbsBar" class="img-thumbs-bar hidden"></div>
+              <div style="padding: 9px 12px; background: #181c23; border-top: 1px solid #2b323e; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <span class="hint" id="inspectorImgPathHint" style="font-size: 0.76rem;">-</span>
+                <div style="display: flex; gap: 8px;">
+                  <a id="inspectorOpenFullImgBtn" href="#" target="_blank" rel="noopener" class="btn btn-outline-sm">🔎 新窗口看高清大图</a>
+                  <a id="inspectorWorToolLink" href="https://wortool.com/maps" target="_blank" rel="noopener" class="btn btn-outline-sm">🌐 WoRTool 原页</a>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="map-stats-grid">
+                <div class="stat-tile">
+                  <div class="stat-tile-label">攻守阵营 Attacker / Defender</div>
+                  <div class="stat-tile-val" id="insRoles" style="font-size: 0.96rem;">-</div>
+                </div>
+                <div class="stat-tile">
+                  <div class="stat-tile-label">最后总攻 Final Push & 战场宽度</div>
+                  <div class="stat-tile-val" id="insFinalPush" style="font-size: 0.96rem;">-</div>
+                </div>
+                <div class="stat-tile" style="border-left: 3px solid var(--usa-border);">
+                  <div class="stat-tile-label" id="insUsaSideLabel">USA 初始票数 & 槽位</div>
+                  <div class="stat-tile-val" id="insUsaTickets" style="color: var(--usa-light);">-</div>
+                </div>
+                <div class="stat-tile" style="border-left: 3px solid var(--csa-border);">
+                  <div class="stat-tile-label" id="insCsaSideLabel">CSA 初始票数 & 槽位</div>
+                  <div class="stat-tile-val" id="insCsaTickets" style="color: var(--csa-light);">-</div>
+                </div>
+              </div>
+
+              <p id="insDescription" class="hint" style="margin-bottom: 10px; font-size: 0.8rem; line-height: 1.45;"></p>
+
+              <div class="units-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="unit-list-card oob-scroll">
+                  <h4 style="color: var(--usa-light);" id="insUsaOobHeader">🔵 USA 参战编制</h4>
+                  <div id="insUsaUnits"></div>
+                </div>
+                <div class="unit-list-card oob-scroll">
+                  <h4 style="color: var(--csa-light);" id="insCsaOobHeader">⚪ CSA 参战编制</h4>
+                  <div id="insCsaUnits"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <button id="inspectorTogglePoolBtn" type="button" class="btn btn-danger-outline">🚫 将此地图移出抽取池</button>
+          <button id="closeInspectorBtn2" type="button" class="btn btn-primary">确定 OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="i18n.js?v=14"></script>
+  <script src="map_core.js?v=14"></script>
+  <script src="draw.js?v=14"></script>
+</body>
+</html>
