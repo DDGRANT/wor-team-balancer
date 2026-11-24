@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/x-icon" href="favicon.ico?v=21" />
-  <link rel="icon" type="image/png" sizes="256x256" href="favicon.png?v=21" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=22" />
+  <link rel="icon" type="image/png" sizes="256x256" href="favicon.png?v=22" />
   <title>War of Rights Regiments & Win DB · 队伍数据库与胜率库</title>
-  <link rel="stylesheet" href="style.css?v=21" />
+  <link rel="stylesheet" href="style.css?v=22" />
   <style>
     .form-grid-4 {
       display: grid;
@@ -64,6 +64,59 @@
           <input type="file" id="importDbJsonInput" accept=".json" class="hidden" />
           <button id="addSampleMatchBtn" type="button" class="btn btn-outline-sm">+ 填入示例战绩</button>
         </div>
+      </div>
+    </section>
+
+
+    <!-- 0. 本地数据与线上数据分层管理（周日0点自动上传 · 默认保留5周） -->
+    <section class="control-panel" style="border-left: 4px solid #6fd08c;">
+      <div class="panel-top-bar" style="margin-bottom: 12px; padding-bottom: 10px;">
+        <div>
+          <span class="strategy-title">☁️ 本地数据 & 线上快照库（周日 0 点自动上传 · 默认保留 5 周）</span>
+          <div id="syncStatusSub" class="hint" style="margin-top:3px;">正在检查周日 0 点自动上传状态...</div>
+        </div>
+        <div class="btn-group">
+          <button id="manualUploadSnapBtn" type="button" class="btn btn-primary" style="padding:5px 12px; font-size:0.82rem;">⬆️ 立即上传至线上快照</button>
+          <button id="exportOnline5wBtn" type="button" class="btn btn-outline-sm">⬇️ 导出近5周线上快照 JSON</button>
+          <button id="openSyncCfgBtn" type="button" class="btn btn-outline-sm">⚙️ 线上仓库同步设置</button>
+        </div>
+      </div>
+
+      <div id="syncCfgBox" class="hidden" style="background:#14181f; border:1px solid #2e3746; border-radius:6px; padding:12px; margin-bottom:12px;">
+        <div style="font-size:0.82rem; color:var(--gold-accent); font-weight:700; margin-bottom:8px;">可选：绑定 GitHub 仓库实现真实跨设备云端 JSON 写入（留空则使用浏览器线上快照库 + 随时导出 JSON）</div>
+        <div class="form-grid-4" style="margin-bottom:8px;">
+          <div class="field-group">
+            <label class="field-label">GitHub 仓库 (用户名/仓库名)</label>
+            <input type="text" id="cfgGhRepo" class="cell-input" placeholder="如 username/wor-hub" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">线上快照文件路径</label>
+            <input type="text" id="cfgGhPath" class="cell-input" value="data/online_snapshots_5w.json" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">GitHub Token (Fine-grained Contents RW)</label>
+            <input type="password" id="cfgGhToken" class="cell-input" placeholder="github_pat_..." />
+          </div>
+          <div class="field-group">
+            <label class="field-label" style="opacity:0;">保存</label>
+            <button id="saveSyncCfgBtn" type="button" class="btn btn-secondary">保存同步设置</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-table-wrapper" style="max-height: 220px;">
+        <table class="entry-table">
+          <thead>
+            <tr>
+              <th style="width: 20%;">周日0点周期 Week Key</th>
+              <th style="width: 22%;">上传时间 Uploaded At</th>
+              <th style="width: 14%;">类型 Source</th>
+              <th style="width: 24%;">快照摘要 (队伍数 / 战绩场次)</th>
+              <th style="width: 20%; text-align: center;">操作 Action</th>
+            </tr>
+          </thead>
+          <tbody id="onlineSnapshotsTbody"></tbody>
+        </table>
       </div>
     </section>
 
@@ -200,7 +253,8 @@
     </section>
   </div>
 
-  <script src="i18n.js?v=21"></script>
-  <script src="db.js?v=21"></script>
+  <script src="i18n.js?v=22"></script>
+  <script src="cloud_sync.js?v=22"></script>
+  <script src="db.js?v=22"></script>
 </body>
 </html>

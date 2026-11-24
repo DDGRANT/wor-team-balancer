@@ -33,6 +33,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   renderQuickAddChips();
   bindFormAndButtons();
   renderAllDbTables();
+  await initCloudSyncSection();
 });
 
 function bindLangButtons() {
@@ -435,3 +436,93 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+
+async function initCloudSyncSection() {
+  if (!window.WoRCloudSync) return;
+  const didAuto = await window.WoRCloudSync.checkSundayZeroAutoUpload();
+  renderSyncStatusAndTable(didAuto);
+
+  document.getElementById("manualUploadSnapBtn").addEventListener("click", async () => {
+    const res = await window.WoRCloudSync.uploadSnapshot("manual");
+    renderSyncStatusAndTable(false, `已手动上传快照 (${res.record.uploadedAt})，当前线上保留最近 ${res.snapshots.length}/5 周数据`);
+  });
+
+  document.getElementById("exportOnline5wBtn").addEventListener("click", () => {
+    const snaps = window.WoRCloudSync.loadSnapshots();
+    const blob = new Blob([JSON.stringify({ retentionWeeks: 5, snapshots: snaps }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `WoR_Online_Snapshots_5Weeks_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("openSyncCfgBtn").addEventListener("click", () => {
+    const box = document.getElementById("syncCfgBox");
+    const cfg = window.WoRCloudSync.getSyncConfig();
+    document.getElementById("cfgGhRepo").value = cfg.githubRepo || "";
+    document.getElementById("cfgGhPath").value = cfg.githubPath || "data/online_snapshots_5w.json";
+    document.getElementById("cfgGhToken").value = cfg.githubToken || "";
+    box.classList.toggle("hidden");
+  });
+
+  document.getElementById("saveSyncCfgBtn").addEventListener("click", () => {
+    window.WoRCloudSync.saveSyncConfig({
+      githubRepo: document.getElementById("cfgGhRepo").value.trim(),
+      githubPath: document.getElementById("cfgGhPath").value.trim() || "data/online_snapshots_5w.json",
+      githubToken: document.getElementById("cfgGhToken").value.trim()
+    });
+    document.getElementById("syncCfgBox").classList.add("hidden");
+    renderSyncStatusAndTable(false, "已保存线上同步配置");
+  });
+}
+
+function renderSyncStatusAndTable(didAuto, extraMsg = "") {
+  const snaps = window.WoRCloudSync.loadSnapshots();
+  const wkKey = window.WoRCloudSync.getCurrentSundayWeekKey();
+  const subEl = document.getElementById("syncStatusSub");
+  if (subEl) {
+    const autoTxt = didAuto ? " · 本周日0点自动上传已完成" : "";
+    const extraTxt = extraMsg ? ` · ${extraMsg}` : "";
+    subEl.textContent = `本地实时写入 | 线上默认保留 5 周快照 (当前已存 ${snaps.length}/5 份，当前周期: ${wkKey})${autoTxt}${extraTxt}`;
+  }
+
+  const tbody = document.getElementById("onlineSnapshotsTbody");
+  if (!tbody) return;
+
+  if (snaps.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">暂无线上快照，点击“立即上传至线上快照”或等待周日 0 点自动上传</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = snaps.map((s) => {
+    const regCnt = (s.payload?.asiaRegimentsDb || []).length;
+    const logCnt = (s.payload?.matchLogs || []).length;
+    const srcLabel = s.source === "sunday_00_auto" ? "周日0点自动" : "手动上传";
+    return `
+      <tr>
+        <td><strong>${escapeHtml(s.weekKey)}</strong></td>
+        <td style="font-size:0.82rem;">${escapeHtml(s.uploadedAt)}</td>
+        <td><span class="tag-seed">${srcLabel}</span></td>
+        <td style="font-size:0.82rem;">队伍库 ${regCnt} 支 · 战绩 ${logCnt} 场</td>
+        <td style="text-align:center;">
+          <button type="button" class="btn btn-outline-sm" onclick="restoreOnlineSnap('${s.id}')">恢复此快照</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+window.restoreOnlineSnap = async function (snapId) {
+  if (!confirm("确定要用选中的线上快照覆盖当前本地数据吗？")) return;
+  const ok = window.WoRCloudSync.restoreSnapshot(snapId);
+  if (ok) {
+    await loadRegimentsDb();
+    loadMatchLogs();
+    renderQuickAddChips();
+    renderAllDbTables();
+    renderSyncStatusAndTable(false, "已从线上快照恢复本地数据");
+  }
+};
