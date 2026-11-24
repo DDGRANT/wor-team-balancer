@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>War of Rights Map Picker · 联队地图抽取与战术检视</title>
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="style.css?v=13" />
   <style>
     .map-inspector-grid {
       display: grid;
@@ -21,25 +21,76 @@
       flex-direction: column;
       justify-content: space-between;
     }
-    .map-preview-frame img, .map-preview-frame svg {
+    .map-preview-frame img {
       width: 100%;
       height: auto;
       display: block;
+      cursor: zoom-in;
+    }
+    .img-thumbs-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 8px 10px;
+      background: #13171e;
+      border-top: 1px solid #262d38;
+    }
+    .thumb-pill {
+      background: #1e242e;
+      color: #cbd2df;
+      border: 1px solid #384152;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 0.76rem;
+      cursor: pointer;
+    }
+    .thumb-pill.active {
+      border-color: var(--gold-accent);
+      color: var(--gold-accent);
+      font-weight: 700;
     }
     .map-stats-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 9px;
+      margin-bottom: 12px;
     }
     .stat-tile {
       background: #14181f;
       border: 1px solid #2c3442;
       border-radius: 6px;
-      padding: 10px 12px;
+      padding: 8px 11px;
     }
-    .stat-tile-label { font-size: 0.78rem; color: var(--text-muted); }
-    .stat-tile-val { font-size: 1.15rem; font-weight: 700; color: var(--gold-accent); margin-top: 2px; }
+    .stat-tile-label { font-size: 0.76rem; color: var(--text-muted); }
+    .stat-tile-val { font-size: 1.05rem; font-weight: 700; color: var(--gold-accent); margin-top: 2px; }
+    .oob-scroll {
+      max-height: 310px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .branch-title {
+      font-size: 0.78rem;
+      color: var(--gold-accent);
+      font-weight: 700;
+      margin: 8px 0 4px;
+      text-transform: uppercase;
+    }
+    .weapon-sub {
+      font-size: 0.75rem;
+      color: #8f99ab;
+      margin-left: 12px;
+      margin-bottom: 4px;
+    }
+    .pool-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      background: rgba(91, 155, 213, 0.2);
+      color: #8ab4f8;
+      border: 1px solid rgba(91, 155, 213, 0.4);
+      padding: 0 5px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
     .inspect-btn {
       background: rgba(200, 162, 82, 0.14);
       color: var(--gold-accent);
@@ -58,8 +109,15 @@
       text-decoration-color: rgba(200, 162, 82, 0.5);
     }
     .map-name-link:hover { color: var(--gold-accent); }
-    @media (max-width: 860px) {
+    .mode-selector-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 900px) {
       .map-inspector-grid { grid-template-columns: 1fr; }
+      .mode-selector-grid-5 { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -79,7 +137,7 @@
 
     <header class="header">
       <h1 data-i18n="mapPageTitle">WAR OF RIGHTS · 联队地图抽取池 Map Pool & Draw</h1>
-      <p class="subtitle">完整收录《士气平衡 2026.9》47 张 Skirmish 地图票数、Final Push 时间与士气对比 · 点击任意地图可弹出小窗口检视地图详情</p>
+      <p class="subtitle">对接 WoRTool 全量 72 张地图数据库与《士气平衡 2026.9》票数 · 支持手动移出池外与弹窗检视战术图与完整编制</p>
     </header>
 
     <!-- 1. MODE 选择与抽取控制面板 -->
@@ -89,38 +147,43 @@
         <div class="memory-bar">
           <span id="poolStatsLabel" class="save-indicator"></span>
           <button id="enableAllBtn" class="btn btn-outline-sm" type="button" data-i18n="mapBtnEnableAll">✅ 全部放回抽取池 Enable All in Mode</button>
-          <button id="exportMapCfgBtn" class="btn btn-outline-sm" type="button" data-i18n="mapBtnExportConfig">⬇️ 导出地图池配置 Export JSON</button>
-          <button id="importMapCfgBtn" class="btn btn-outline-sm" type="button" data-i18n="mapBtnImportConfig">⬆️ 导入地图池配置 Import JSON</button>
+          <button id="exportMapCfgBtn" class="btn btn-outline-sm" type="button" data-i18n="mapBtnExportConfig">⬇️ 导出排除配置 Export JSON</button>
+          <button id="importMapCfgBtn" class="btn btn-outline-sm" type="button" data-i18n="mapBtnImportConfig">⬆️ 导入排除配置 Import JSON</button>
           <input type="file" id="importMapCfgInput" accept=".json" class="hidden" />
         </div>
       </div>
 
-      <div class="mode-selector-grid" id="modeSelectorGrid">
-        <div class="mode-pill-card active" data-mode="Skirmish" tabindex="0">
-          <div class="mode-pill-title">Skirmish (47)</div>
-          <div class="mode-pill-count" id="count_Skirmish">0 / 0</div>
+      <div class="mode-selector-grid-5" id="modeSelectorGrid">
+        <div class="mode-pill-card active" data-mode="skirmish" tabindex="0">
+          <div class="mode-pill-title">Skirmish</div>
+          <div class="mode-pill-count" id="count_skirmish">0 / 0</div>
         </div>
-        <div class="mode-pill-card" data-mode="Contention" tabindex="0">
-          <div class="mode-pill-title">Contention</div>
-          <div class="mode-pill-count" id="count_Contention">0 / 0</div>
-        </div>
-        <div class="mode-pill-card" data-mode="Conquest" tabindex="0">
+        <div class="mode-pill-card" data-mode="conquest" tabindex="0">
           <div class="mode-pill-title">Conquest</div>
-          <div class="mode-pill-count" id="count_Conquest">0 / 0</div>
+          <div class="mode-pill-count" id="count_conquest">0 / 0</div>
         </div>
-        <div class="mode-pill-card" data-mode="Picket Patrol" tabindex="0">
+        <div class="mode-pill-card" data-mode="picket_patrol" tabindex="0">
           <div class="mode-pill-title">Picket Patrol</div>
-          <div class="mode-pill-count" id="count_Picket Patrol">0 / 0</div>
+          <div class="mode-pill-count" id="count_picket_patrol">0 / 0</div>
+        </div>
+        <div class="mode-pill-card" data-mode="onslaught" tabindex="0">
+          <div class="mode-pill-title">Onslaught</div>
+          <div class="mode-pill-count" id="count_onslaught">0 / 0</div>
+        </div>
+        <div class="mode-pill-card" data-mode="drill_camp" tabindex="0">
+          <div class="mode-pill-title">Drill Camp</div>
+          <div class="mode-pill-count" id="count_drill_camp">0 / 0</div>
         </div>
       </div>
 
       <div class="filter-bar">
         <div class="campaign-filters" id="campaignFilters">
-          <button type="button" class="camp-btn active" data-camp="ALL">全部战役 All Campaigns</button>
-          <button type="button" class="camp-btn" data-camp="Antietam">Antietam (18)</button>
-          <button type="button" class="camp-btn" data-camp="Harpers Ferry">Harpers Ferry (10)</button>
-          <button type="button" class="camp-btn" data-camp="South Mountain">South Mountain (6)</button>
-          <button type="button" class="camp-btn" data-camp="Drill Camp">Drill Camp (13)</button>
+          <button type="button" class="camp-btn active" data-camp="ALL">全部战役 All</button>
+          <button type="button" class="camp-btn" data-camp="antietam">Antietam</button>
+          <button type="button" class="camp-btn" data-camp="harpers-ferry">Harpers Ferry</button>
+          <button type="button" class="camp-btn" data-camp="south-mountain">South Mountain</button>
+          <button type="button" class="camp-btn" data-camp="drill-camp">Drill Camp</button>
+          <button type="button" class="camp-btn" data-camp="onslaught">Onslaught</button>
         </div>
 
         <div class="btn-group">
@@ -139,19 +202,20 @@
         <div class="drawn-meta-tags">
           <span class="meta-tag" id="drawnCampTag">Campaign: -</span>
           <span class="meta-tag" id="drawnRoleTag">Attacker / Defender: -</span>
+          <span class="meta-tag" id="drawnSlotsTag">Unit Slots: -</span>
           <span class="meta-tag" id="drawnFinalPushTag" style="color: var(--gold-accent);">Final Push: -</span>
           <button id="openDrawnInspectorBtn" class="btn btn-primary" type="button">🔍 打开地图详情小窗 Inspect Map</button>
         </div>
       </div>
 
-      <div class="tickets-compare-bar">
+      <div class="tickets-compare-bar" id="drawnTicketsBar">
         <div class="ticket-box ticket-usa">
-          <span>USA 联邦军票数 Tickets</span>
-          <span class="ticket-num" id="drawnUsaTickets">0</span>
+          <span>USA 初始票数 Tickets</span>
+          <span class="ticket-num" id="drawnUsaTickets">-</span>
         </div>
         <div class="ticket-box ticket-csa">
-          <span>CSA 邦联军票数 Tickets</span>
-          <span class="ticket-num" id="drawnCsaTickets">0</span>
+          <span>CSA 初始票数 Tickets</span>
+          <span class="ticket-num" id="drawnCsaTickets">-</span>
         </div>
       </div>
 
@@ -166,17 +230,17 @@
 
     <!-- 3. 当前模式地图池管理表格 -->
     <section class="control-panel">
-      <div class="input-table-wrapper" style="max-height: 560px;">
+      <div class="input-table-wrapper" style="max-height: 580px;">
         <table class="entry-table">
           <thead>
             <tr>
               <th style="width: 10%;">池状态 Pool</th>
-              <th style="width: 21%;">地图名称 Map Name (点击检视)</th>
+              <th style="width: 22%;">地图名称 Map Name (点击检视)</th>
               <th style="width: 12%;">战役 Campaign</th>
-              <th style="width: 11%;">攻守 Attacker</th>
-              <th style="width: 10%;">Final Push</th>
-              <th style="width: 14%;">票数 USA / CSA</th>
-              <th style="width: 22%;">移出池外备注 Exclusion Note</th>
+              <th style="width: 11%;">攻守 Role</th>
+              <th style="width: 10%;">单位槽位</th>
+              <th style="width: 14%;">票数 & 总攻时间</th>
+              <th style="width: 21%;">移出池外备注 Exclusion Note</th>
             </tr>
           </thead>
           <tbody id="mapPoolTbody"></tbody>
@@ -190,65 +254,59 @@
       <ul id="disabledNoticeList" class="notice-list"></ul>
     </section>
 
-    <!-- 5. 地图独立检视小窗口 (Modal) -->
+    <!-- 5. 地图独立检视小窗口 (Modal Inspector) -->
     <div id="mapInspectorModal" class="modal hidden">
-      <div class="modal-content" style="max-width: 1020px;">
+      <div class="modal-content" style="max-width: 1120px;">
         <div class="modal-header">
-          <h3 id="inspectorTitle">🗺️ 地图战术与票数详情 Map Inspector</h3>
+          <h3 id="inspectorTitle">🗺️ 地图战术与编制详情 Map Inspector</h3>
           <button id="closeInspectorBtn" class="btn btn-secondary" type="button">关闭 Close ✕</button>
         </div>
         <div class="modal-body" style="background: #14171c;">
           <div class="map-inspector-grid">
-            <!-- 左侧：战术地图图片预览区（优先加载本地 img/ 下的 wortool 地图截图，缺失时自动渲染 SVG 战术示意并提示上传） -->
+            <!-- 左侧：战术地图图片预览区（自动加载 maps_web/*.webp 或 maps/*.png，支持多图切换与点击看原图） -->
             <div class="map-preview-frame">
               <div id="inspectorImageContainer"></div>
-              <div style="padding: 10px 12px; background: #181c23; border-top: 1px solid #2b323e; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <span class="hint" id="inspectorImgPathHint" style="font-size: 0.78rem;">图片路径: img/...</span>
+              <div id="inspectorThumbsBar" class="img-thumbs-bar hidden"></div>
+              <div style="padding: 9px 12px; background: #181c23; border-top: 1px solid #2b323e; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <span class="hint" id="inspectorImgPathHint" style="font-size: 0.76rem;">-</span>
                 <div style="display: flex; gap: 8px;">
-                  <a href="https://wortool.com/maps" target="_blank" rel="noopener" class="btn btn-outline-sm">🌐 前往 wortool.com/maps</a>
-                  <button id="uploadCustomMapImgBtn" type="button" class="btn btn-outline-sm">🖼️ 本地预览替换图片</button>
-                  <input type="file" id="customMapImgInput" accept="image/*" class="hidden" />
+                  <a id="inspectorOpenFullImgBtn" href="#" target="_blank" rel="noopener" class="btn btn-outline-sm">🔎 新窗口看高清大图</a>
+                  <a id="inspectorWorToolLink" href="https://wortool.com/maps" target="_blank" rel="noopener" class="btn btn-outline-sm">🌐 WoRTool 原页</a>
                 </div>
               </div>
             </div>
 
-            <!-- 右侧：PDF 精确士气票数、Final Push 时间与参战编制 -->
+            <!-- 右侧：士气票数、地图背景描述与完整双方编制（含武器型号与数量） -->
             <div>
               <div class="map-stats-grid">
                 <div class="stat-tile">
                   <div class="stat-tile-label">攻守阵营 Attacker / Defender</div>
-                  <div class="stat-tile-val" id="insRoles" style="font-size: 1rem;">-</div>
+                  <div class="stat-tile-val" id="insRoles" style="font-size: 0.96rem;">-</div>
                 </div>
                 <div class="stat-tile">
-                  <div class="stat-tile-label">最后总攻 Final Push</div>
-                  <div class="stat-tile-val" id="insFinalPush">-</div>
+                  <div class="stat-tile-label">最后总攻 Final Push & 战场宽度</div>
+                  <div class="stat-tile-val" id="insFinalPush" style="font-size: 0.96rem;">-</div>
                 </div>
                 <div class="stat-tile" style="border-left: 3px solid var(--usa-border);">
-                  <div class="stat-tile-label">USA 初始票数 Tickets</div>
+                  <div class="stat-tile-label" id="insUsaSideLabel">USA 初始票数 & 槽位</div>
                   <div class="stat-tile-val" id="insUsaTickets" style="color: var(--usa-light);">-</div>
                 </div>
                 <div class="stat-tile" style="border-left: 3px solid var(--csa-border);">
-                  <div class="stat-tile-label">CSA 初始票数 Tickets</div>
+                  <div class="stat-tile-label" id="insCsaSideLabel">CSA 初始票数 & 槽位</div>
                   <div class="stat-tile-val" id="insCsaTickets" style="color: var(--csa-light);">-</div>
-                </div>
-                <div class="stat-tile">
-                  <div class="stat-tile-label">总票数 Total & 优势方 Favored</div>
-                  <div class="stat-tile-val" id="insFavored" style="font-size: 0.95rem;">-</div>
-                </div>
-                <div class="stat-tile">
-                  <div class="stat-tile-label">票数差对比 Ticket Contrast</div>
-                  <div class="stat-tile-val" id="insContrast" style="font-size: 0.9rem;">-</div>
                 </div>
               </div>
 
+              <p id="insDescription" class="hint" style="margin-bottom: 10px; font-size: 0.8rem; line-height: 1.45;"></p>
+
               <div class="units-grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="unit-list-card">
-                  <h4 style="color: var(--usa-light);">🔵 USA 参战单位 Units</h4>
-                  <ul id="insUsaUnits"></ul>
+                <div class="unit-list-card oob-scroll">
+                  <h4 style="color: var(--usa-light);" id="insUsaOobHeader">🔵 USA 参战编制</h4>
+                  <div id="insUsaUnits"></div>
                 </div>
-                <div class="unit-list-card">
-                  <h4 style="color: var(--csa-light);">⚪ CSA 参战单位 Units</h4>
-                  <ul id="insCsaUnits"></ul>
+                <div class="unit-list-card oob-scroll">
+                  <h4 style="color: var(--csa-light);" id="insCsaOobHeader">⚪ CSA 参战编制</h4>
+                  <div id="insCsaUnits"></div>
                 </div>
               </div>
             </div>
@@ -262,7 +320,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=11"></script>
-  <script src="maps.js?v=11"></script>
+  <script src="i18n.js?v=13"></script>
+  <script src="maps.js?v=13"></script>
 </body>
 </html>
