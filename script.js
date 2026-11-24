@@ -1,5 +1,6 @@
 // 本地存储 Key 定义
-const STORAGE_KEY_AUTO = "wor_balancer_autosave_v9";
+const STORAGE_KEY_AUTO = "wor_balancer_autosave_v10";
+const STORAGE_KEY_MAP_SHARED = "wor_map_pool_state_v4";
 const STORAGE_KEY_PRESET = "wor_balancer_preset_v9";
 const STORAGE_KEY_LANG = "wor_balancer_lang_v8";
 
@@ -33,7 +34,62 @@ const parseWarning = document.getElementById("parseWarning");
 const saveIndicator = document.getElementById("saveIndicator");
 const activeModeTag = document.getElementById("activeModeTag");
 
+
+// 职责位置选项 (Top A, Top B, Bottom A, Bottom B, CAV, SS)
+const ROLE_OPTIONS = [
+  { value: "", label: "-- 未指定 --", short: "" },
+  { value: "Top A", label: "Top A (上路A)", short: "Top A" },
+  { value: "Top B", label: "Top B (上路B)", short: "Top B" },
+  { value: "Bottom A", label: "Bottom A (下路A)", short: "Bottom A" },
+  { value: "Bottom B", label: "Bottom B (下路B)", short: "Bottom B" },
+  { value: "CAV", label: "CAV (骑兵)", short: "CAV" },
+  { value: "SS", label: "SS (神射手)", short: "SS" }
+];
+
+function getSavedMatchMaps() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_MAP_SHARED);
+    if (!raw) return [null, null];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed.matchMaps) && parsed.matchMaps.length === 2 ? parsed.matchMaps : [null, null];
+  } catch (e) {
+    return [null, null];
+  }
+}
+
+function renderSyncedMatchMaps() {
+  const maps = getSavedMatchMaps();
+  [0, 1].forEach((idx) => {
+    const m = maps[idx];
+    const tEl = document.getElementById(`idxMap${idx + 1}Title`);
+    const mEl = document.getElementById(`idxMap${idx + 1}Meta`);
+    if (!tEl || !mEl) return;
+    if (!m) {
+      tEl.textContent = "尚未抽取（请前往地图抽取页抽取）";
+      mEl.textContent = "-";
+    } else {
+      const att = m.attacker ? m.attacker.toUpperCase() : "Neutral";
+      const def = m.defender ? m.defender.toUpperCase() : "Neutral";
+      const ticketStr = m.usa_tickets !== null ? `USA ${m.usa_tickets} vs CSA ${m.csa_tickets} | Final Push: ${m.final_push}` : `Units: ${m.unit_slots || "-"} 槽`;
+      tEl.textContent = `${m.name} (${m.campaign_name || m.campaign} · ${m.mode_name || m.mode})`;
+      mEl.textContent = `攻 Att: ${att} / 守 Def: ${def} | ${ticketStr}`;
+    }
+  });
+}
+
+window.updateTeamRole = function (faction, teamId, roleVal) {
+  const list = currentState[faction] || [];
+  const item = list.find((x) => x.id === teamId);
+  if (item) {
+    item.assignedRole = roleVal;
+    saveToAutoSave();
+  }
+};
+
 window.addEventListener("DOMContentLoaded", () => {
+  renderSyncedMatchMaps();
+  const syncBtn = document.getElementById("syncMapsBtn");
+  if (syncBtn) syncBtn.addEventListener("click", renderSyncedMatchMaps);
   bindLanguageButtons();
   bindStrategyCards();
   loadFromAutoSave();
@@ -839,7 +895,14 @@ function runBalance() {
     return;
   }
 
+  const prevRoles = {};
+  [...currentState.usa, ...currentState.csa].forEach((oldItem) => {
+    if (oldItem.assignedRole) prevRoles[oldItem.name] = oldItem.assignedRole;
+  });
   currentState = balanceTeams(teams, currentMode);
+  [...currentState.usa, ...currentState.csa].forEach((newItem) => {
+    if (prevRoles[newItem.name]) newItem.assignedRole = prevRoles[newItem.name];
+  });
   renderResultTables();
   saveToAutoSave();
 }
@@ -874,7 +937,7 @@ function renderSingleResultTable(faction, list) {
   if (!tbody) return;
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">${escapeHtml(t("emptyResultRow"))}</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">${escapeHtml(t("emptyResultRow"))}</td></tr>`;
     if (footRaw) footRaw.innerHTML = `<strong>0 - 0</strong>`;
     if (footAdj) footAdj.innerHTML = `<strong>0 - 0 (0.0)</strong>`;
     if (footSlots) footSlots.innerHTML = `<strong>${escapeHtml(t("slotCount", 0))}</strong>`;
@@ -907,12 +970,22 @@ function renderSingleResultTable(faction, list) {
         badges.push(`<span class="tag-auto">${escapeHtml(t("statusAuto"))}</span>`);
       }
 
+      const roleOptionsHtml = ROLE_OPTIONS.map((opt) =>
+        `<option value="${opt.value}" ${(item.assignedRole || "") === opt.value ? "selected" : ""}>${opt.label}</option>`
+      ).join("");
+
       return `
         <tr>
           <td><strong>${escapeHtml(item.name)}</strong></td>
           <td>${rawText}</td>
           <td><strong style="color:${item.isModified ? "#f0b866" : "inherit"}">${adjText}</strong></td>
           <td>${getBracketBadgeHtml(bracket)}</td>
+          <td>
+            <select id="role_${faction}_${item.id}" name="role_${faction}_${item.id}" class="cell-select" style="padding:3px 6px; font-size:0.82rem; min-width:118px;"
+              onchange="updateTeamRole('${faction}', '${item.id}', this.value)">
+              ${roleOptionsHtml}
+            </select>
+          </td>
           <td>${badges.join(" ")}</td>
           <td>
             <button class="swap-btn" type="button" onclick="swapTeamFaction('${item.id}', '${faction}')">
@@ -1053,18 +1126,34 @@ function copyScheduleText() {
   const formatLine = (item) => {
     const avg = item.avg ?? (item.min + item.max) / 2;
     const bTag = getBracketShortLabel(item.bracket || classifyBracket(avg).bracket);
+    const roleTag = item.assignedRole ? `【${item.assignedRole}】` : "";
     const adj = `${item.min}-${item.max}`;
     if (item.isModified) {
-      return t("exportLineMod", item.name, adj, item.rawMin, item.rawMax, bTag);
+      return t("exportLineMod", `${roleTag}${item.name}`, adj, item.rawMin, item.rawMax, bTag);
     }
-    return t("exportLineNorm", item.name, adj, bTag);
+    return t("exportLineNorm", `${roleTag}${item.name}`, adj, bTag);
   };
 
   const teamDiff = Math.abs(currentState.usa.length - currentState.csa.length);
+  const matchMaps = getSavedMatchMaps();
 
   const lines = [
     t("exportTitle"),
-    t("exportModeLine", getModeDisplayName(currentMode)),
+    t("exportModeLine", getModeDisplayName(currentMode))
+  ];
+
+  if (matchMaps[0] || matchMaps[1]) {
+    lines.push("", "🗺️ 【本场抽取地图 Match Maps】：");
+    matchMaps.forEach((m, idx) => {
+      if (!m) return;
+      const att = m.attacker ? m.attacker.toUpperCase() : "Neutral";
+      const def = m.defender ? m.defender.toUpperCase() : "Neutral";
+      const tPart = m.usa_tickets !== null ? ` | 票数Tickets: USA ${m.usa_tickets} vs CSA ${m.csa_tickets} | Final Push: ${m.final_push}` : "";
+      lines.push(`• Map ${idx + 1}: ${m.name} (${m.campaign_name || m.campaign} · ${m.mode_name || m.mode}) | 攻Att:${att} 守Def:${def}${tPart}`);
+    });
+  }
+
+  lines.push(
     "",
     t("exportUSA", uStats.min, uStats.max, uStats.avg.toFixed(1), uStats.countL, uStats.countM, uStats.countS),
     ...currentState.usa.map(formatLine),
@@ -1073,7 +1162,7 @@ function copyScheduleText() {
     ...currentState.csa.map(formatLine),
     "",
     t("exportDiff", Math.abs(uStats.min - cStats.min), Math.abs(uStats.max - cStats.max), teamDiff)
-  ];
+  );
 
   const notices = getActivePublicNotices();
   if (notices.length > 0) {
@@ -1101,11 +1190,15 @@ function generateScheduleImage() {
   const uStats = sumStats(currentState.usa);
   const cStats = sumStats(currentState.csa);
   const notices = getActivePublicNotices();
+  const matchMaps = getSavedMatchMaps();
+  const hasMatchMaps = !!(matchMaps[0] || matchMaps[1]);
 
   const width = 1080;
   const maxRows = Math.max(currentState.usa.length, currentState.csa.length, 1);
   const rowHeight = 42;
-  const tableStartY = 200;
+  const mapBannerHeight = hasMatchMaps ? 78 : 0;
+  const summaryStartY = 108 + mapBannerHeight;
+  const tableStartY = 200 + mapBannerHeight;
   const tableHeight = 44 + maxRows * rowHeight + 46;
   const noticeBlockHeight = notices.length > 0 ? 55 + notices.length * 28 : 0;
   const height = tableStartY + tableHeight + noticeBlockHeight + 65;
@@ -1138,14 +1231,41 @@ function generateScheduleImage() {
   const teamDiff = Math.abs(currentState.usa.length - currentState.csa.length);
   ctx.fillText(t("imgSubtitle", timeStr, getModeDisplayName(currentMode), minDiff, maxDiff, teamDiff), width / 2, 84);
 
+  if (hasMatchMaps) {
+    [0, 1].forEach((idx) => {
+      const mx = idx === 0 ? 36 : 559;
+      const m = matchMaps[idx];
+      ctx.fillStyle = "#191f28";
+      ctx.fillRect(mx, 104, 485, 64);
+      ctx.strokeStyle = "#c8a252";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(mx, 104, 485, 64);
+
+      ctx.fillStyle = "#c8a252";
+      ctx.font = `bold 13.5px ${fontStack}`;
+      ctx.textAlign = "left";
+      if (m) {
+        const att = m.attacker ? m.attacker.toUpperCase() : "Neutral";
+        const def = m.defender ? m.defender.toUpperCase() : "Neutral";
+        ctx.fillText(`🗺️ MAP ${idx + 1}: ${m.name} (${m.campaign_name || m.campaign})`, mx + 14, 128);
+        ctx.fillStyle = "#cbd2df";
+        ctx.font = `12px ${fontStack}`;
+        const tStr = m.usa_tickets !== null ? ` | USA ${m.usa_tickets} vs CSA ${m.csa_tickets} | Final Push ${m.final_push}` : "";
+        ctx.fillText(`攻Att: ${att} / 守Def: ${def}${tStr}`, mx + 14, 152);
+      } else {
+        ctx.fillText(`🗺️ MAP ${idx + 1}: 未抽取 Not Drawn`, mx + 14, 140);
+      }
+    });
+  }
+
   drawSummaryBox(
-    ctx, fontStack, 36, 108, 485, 70, "#1f4268", "#7fb3eb",
+    ctx, fontStack, 36, summaryStartY, 485, 70, "#1f4268", "#7fb3eb",
     t("imgUSATitle"),
     `${uStats.min} - ${uStats.max}`,
     t("imgCardSub", uStats.avg.toFixed(1), uStats.rawMin, uStats.rawMax)
   );
   drawSummaryBox(
-    ctx, fontStack, 559, 108, 485, 70, "#4b4f56", "#d1b48c",
+    ctx, fontStack, 559, summaryStartY, 485, 70, "#4b4f56", "#d1b48c",
     t("imgCSATitle"),
     `${cStats.min} - ${cStats.max}`,
     t("imgCardSub", cStats.avg.toFixed(1), cStats.rawMin, cStats.rawMax)
@@ -1250,7 +1370,8 @@ function drawFactionTable(ctx, fontStack, x, y, w, maxRows, rowH, headerColor, t
     ctx.textAlign = "left";
     ctx.fillStyle = "#e6e8ec";
     ctx.font = `bold 14.5px ${fontStack}`;
-    ctx.fillText(item.name, x + 16, ry + 26);
+    const displayName = item.assignedRole ? `[${item.assignedRole}] ${item.name}` : item.name;
+    ctx.fillText(displayName, x + 16, ry + 26);
 
     const adjStr = `${item.min}-${item.max}`;
     ctx.textAlign = "right";

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>War of Rights Team Balancer · 联队人数平衡器</title>
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=16" />
 </head>
 <body>
   <div class="container">
@@ -161,6 +161,30 @@
       </div>
     </section>
 
+
+    <!-- 2.5 本场抽取的两张比赛地图联动栏（来自地图抽取页） -->
+    <section class="control-panel" style="border-left: 4px solid #3a6ea5; padding: 14px 18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 10px;">
+        <span style="font-weight: 700; color: var(--gold-accent); font-size: 0.96rem;">🗺️ 本场两张比赛地图 Match Maps（自动读取抽图结果并并入战报）</span>
+        <div class="btn-group">
+          <button id="syncMapsBtn" type="button" class="btn btn-outline-sm">🔄 刷新同步抽图结果 Sync Maps</button>
+          <a href="draw.html" class="btn btn-outline-sm">🎲 前往抽取地图 Go to Map Draw →</a>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="background:#14181f; border:1px solid #2c3442; border-radius:6px; padding:10px 12px;">
+          <span class="faction-badge usa-badge" style="margin-bottom:3px;">MAP 1 · 第一局</span>
+          <div id="idxMap1Title" style="font-weight:700; color:#e6e8ec; font-size:0.95rem;">尚未抽取（请前往地图抽取页抽取）</div>
+          <div id="idxMap1Meta" class="hint" style="font-size:0.78rem;">-</div>
+        </div>
+        <div style="background:#14181f; border:1px solid #2c3442; border-radius:6px; padding:10px 12px;">
+          <span class="faction-badge csa-badge" style="margin-bottom:3px;">MAP 2 · 第二局</span>
+          <div id="idxMap2Title" style="font-weight:700; color:#e6e8ec; font-size:0.95rem;">尚未抽取（请前往地图抽取页抽取）</div>
+          <div id="idxMap2Meta" class="hint" style="font-size:0.78rem;">-</div>
+        </div>
+      </div>
+    </section>
+
     <!-- 3. 双方总览对比栏 -->
     <section class="summary-bar" id="summaryBar">
       <div class="summary-card usa-card">
@@ -201,6 +225,7 @@
                 <th data-i18n="resThRaw">申报 Raw</th>
                 <th data-i18n="resThAdj">修正 Adj</th>
                 <th data-i18n="resThBracket">分级 Bracket</th>
+                <th>职责位置 Tactical Role</th>
                 <th data-i18n="resThStatus">状态 Status</th>
                 <th data-i18n="thAction">操作 Action</th>
               </tr>
@@ -212,7 +237,7 @@
                 <td id="usaFootRaw"><strong>0 - 0</strong></td>
                 <td id="usaFootAdj"><strong>0 - 0 (0.0)</strong></td>
                 <td id="usaFootSlots"><strong>0 槽</strong></td>
-                <td colspan="2"></td>
+                <td colspan="3"></td>
               </tr>
             </tfoot>
           </table>
@@ -233,6 +258,7 @@
                 <th data-i18n="resThRaw">申报 Raw</th>
                 <th data-i18n="resThAdj">修正 Adj</th>
                 <th data-i18n="resThBracket">分级 Bracket</th>
+                <th>职责位置 Tactical Role</th>
                 <th data-i18n="resThStatus">状态 Status</th>
                 <th data-i18n="thAction">操作 Action</th>
               </tr>
@@ -244,7 +270,7 @@
                 <td id="csaFootRaw"><strong>0 - 0</strong></td>
                 <td id="csaFootAdj"><strong>0 - 0 (0.0)</strong></td>
                 <td id="csaFootSlots"><strong>0 槽</strong></td>
-                <td colspan="2"></td>
+                <td colspan="3"></td>
               </tr>
             </tfoot>
           </table>
@@ -282,7 +308,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=14"></script>
-  <script src="script.js?v=14"></script>
+  <script src="i18n.js?v=16"></script>
+  <script src="script.js?v=16"></script>
 </body>
 </html>

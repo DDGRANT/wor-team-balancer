@@ -3,6 +3,7 @@ let activeAnimRaf = null;
 let activeInterval = null;
 let isAnimating = false;
 let currentDrawnMap = null;
+let targetSlotIndex = 0;
 let scratchRevealed = false;
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -56,11 +57,42 @@ function bindDrawPageEvents() {
   noRepChk.checked = core.poolState.noReplacement;
   noRepChk.addEventListener("change", () => {
     core.poolState.noReplacement = noRepChk.checked;
+    // 写入本场两张比赛地图槽位
+    if (!Array.isArray(core.poolState.matchMaps) || core.poolState.matchMaps.length !== 2) {
+      core.poolState.matchMaps = [null, null];
+    }
+    core.poolState.matchMaps[targetSlotIndex] = {
+      slug: winner.slug,
+      name: winner.name,
+      campaign: winner.campaign,
+      campaign_name: winner.campaign_name || winner.campaign,
+      mode: winner.mode,
+      mode_name: winner.mode_name || winner.mode,
+      attacker: winner.attacker,
+      defender: winner.defender,
+      final_push: winner.final_push,
+      usa_tickets: winner.usa_tickets,
+      csa_tickets: winner.csa_tickets,
+      total_tickets: winner.total_tickets,
+      unit_slots: winner.unit_slots
+    };
     core.saveState();
   });
 
   // Start draw button
-  document.getElementById("startDrawBtn").addEventListener("click", startDrawSequence);
+  document.getElementById("drawSlot1Btn").addEventListener("click", () => { targetSlotIndex = 0; startDrawSequence(); });
+  document.getElementById("drawSlot2Btn").addEventListener("click", () => { targetSlotIndex = 1; startDrawSequence(); });
+  document.getElementById("startDrawBtn").addEventListener("click", () => {
+    const core = window.WoRMapCore;
+    targetSlotIndex = !core.poolState.matchMaps[0] ? 0 : (!core.poolState.matchMaps[1] ? 1 : 0);
+    startDrawSequence();
+  });
+  document.getElementById("clearMatchMapsBtn").addEventListener("click", () => {
+    const core = window.WoRMapCore;
+    core.poolState.matchMaps = [null, null];
+    core.saveState();
+    renderMatchSlots();
+  });
 
   // Scratch reveal button
   document.getElementById("revealScratchNowBtn").addEventListener("click", () => {
@@ -137,6 +169,7 @@ function refreshDrawUI() {
   document.getElementById("drawPoolStatus").textContent = `当前筛选可抽池 Active Pool: ${candidates.length} 张 (模式总计 ${modeTotal} 张)`;
 
   renderHistoryChips();
+  renderMatchSlots();
 }
 
 function renderHistoryChips() {
@@ -237,6 +270,25 @@ function finalizeDrawnMap(winner) {
         time: nowStr
       });
     }
+    // 写入本场两张比赛地图槽位
+    if (!Array.isArray(core.poolState.matchMaps) || core.poolState.matchMaps.length !== 2) {
+      core.poolState.matchMaps = [null, null];
+    }
+    core.poolState.matchMaps[targetSlotIndex] = {
+      slug: winner.slug,
+      name: winner.name,
+      campaign: winner.campaign,
+      campaign_name: winner.campaign_name || winner.campaign,
+      mode: winner.mode,
+      mode_name: winner.mode_name || winner.mode,
+      attacker: winner.attacker,
+      defender: winner.defender,
+      final_push: winner.final_push,
+      usa_tickets: winner.usa_tickets,
+      csa_tickets: winner.csa_tickets,
+      total_tickets: winner.total_tickets,
+      unit_slots: winner.unit_slots
+    };
     core.saveState();
   }
 
@@ -832,3 +884,35 @@ function copyResultText() {
     }
   });
 }
+
+
+function renderMatchSlots() {
+  const core = window.WoRMapCore;
+  const slots = core.poolState.matchMaps || [null, null];
+  [0, 1].forEach((idx) => {
+    const m = slots[idx];
+    const nameEl = document.getElementById(`matchSlotName${idx}`);
+    const metaEl = document.getElementById(`matchSlotMeta${idx}`);
+    if (!nameEl || !metaEl) return;
+    if (!m) {
+      nameEl.textContent = "未抽取 Not Drawn";
+      metaEl.textContent = `请点击上方“抽取第 ${idx + 1} 张地图”`;
+    } else {
+      const att = m.attacker ? m.attacker.toUpperCase() : "Neutral";
+      const def = m.defender ? m.defender.toUpperCase() : "Neutral";
+      const ticketStr = m.usa_tickets !== null ? `USA ${m.usa_tickets} vs CSA ${m.csa_tickets} | Final Push ${m.final_push}` : `Units: ${m.unit_slots || "-"} 槽`;
+      nameEl.textContent = `${m.name} (${m.campaign_name || m.campaign})`;
+      metaEl.textContent = `攻 Att: ${att} / 守 Def: ${def} | ${ticketStr}`;
+    }
+  });
+}
+
+window.inspectMatchSlot = function (idx) {
+  const core = window.WoRMapCore;
+  const m = (core.poolState.matchMaps || [])[idx];
+  if (!m) {
+    alert(`第 ${idx + 1} 张地图尚未抽取！`);
+    return;
+  }
+  core.openInspector(m.slug, 0);
+};

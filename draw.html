@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>War of Rights Map Draw · 联队地图抽取</title>
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=16" />
   <style>
     .mode-selector-grid-5 {
       display: grid;
@@ -269,10 +269,14 @@
         </div>
       </div>
 
-      <div class="toolbar">
-        <span class="hint" id="animHintText">点击右侧按钮开始抽取，抽出后将自动从未打地图池中移除</span>
+<div class="toolbar">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span class="hint" id="animHintText">每次抽出后自动移出抽取池，并填入下方【第1张 / 第2张比赛地图】</span>
+        </div>
         <div class="btn-group">
-          <button id="startDrawBtn" class="btn btn-primary" type="button" style="padding: 10px 26px; font-size: 1rem;">🎲 开始抽取 Start Draw</button>
+          <button id="drawSlot1Btn" class="btn btn-primary" type="button" style="padding: 9px 18px;">🎲 抽取第 1 张地图 Draw Map 1</button>
+          <button id="drawSlot2Btn" class="btn btn-primary" type="button" style="padding: 9px 18px;">🎲 抽取第 2 张地图 Draw Map 2</button>
+          <button id="startDrawBtn" class="btn btn-gold" type="button" style="padding: 9px 18px;">⚡ 顺次抽取下一张 Draw Next</button>
         </div>
       </div>
     </section>
@@ -306,6 +310,36 @@
       <div id="canvasStage" class="hidden" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
         <canvas id="animCanvas" width="880" height="440"></canvas>
         <div id="canvasStatusText" class="hint" style="margin-top: 8px; color: var(--gold-accent); font-weight: 600;"></div>
+      </div>
+    </section>
+
+
+    <!-- 3.5 本场两张比赛地图总览（已同步至队伍平衡页合并导出） -->
+    <section class="control-panel" style="border-left: 4px solid var(--gold-accent);">
+      <div class="panel-top-bar" style="margin-bottom: 12px; padding-bottom: 10px;">
+        <span class="strategy-title">🗺️ 本场已定两张比赛地图 Match Maps (自动同步至分队战报)</span>
+        <div class="btn-group">
+          <button id="clearMatchMapsBtn" type="button" class="btn btn-outline-sm">清空两张地图 Clear</button>
+          <a href="index.html" class="btn btn-primary" style="padding: 5px 14px; font-size: 0.84rem;">⚔️ 前往分队页生成联合战报 Go to Balancer →</a>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="stat-tile" id="matchSlotCard0" style="padding: 12px 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="faction-badge usa-badge">MAP 1 · 第一局地图</span>
+            <button type="button" class="btn btn-outline-sm" onclick="inspectMatchSlot(0)">检视详情 🔍</button>
+          </div>
+          <div id="matchSlotName0" style="font-size: 1.15rem; font-weight: 800; color: var(--gold-accent); margin: 6px 0 4px;">未抽取 Not Drawn</div>
+          <div id="matchSlotMeta0" class="hint" style="font-size: 0.8rem;">请点击上方“抽取第 1 张地图”</div>
+        </div>
+        <div class="stat-tile" id="matchSlotCard1" style="padding: 12px 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="faction-badge csa-badge">MAP 2 · 第二局地图</span>
+            <button type="button" class="btn btn-outline-sm" onclick="inspectMatchSlot(1)">检视详情 🔍</button>
+          </div>
+          <div id="matchSlotName1" style="font-size: 1.15rem; font-weight: 800; color: var(--gold-accent); margin: 6px 0 4px;">未抽取 Not Drawn</div>
+          <div id="matchSlotMeta1" class="hint" style="font-size: 0.8rem;">请点击上方“抽取第 2 张地图”</div>
+        </div>
       </div>
     </section>
 
@@ -418,8 +452,8 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=15"></script>
-  <script src="map_core.js?v=15"></script>
-  <script src="draw.js?v=15"></script>
+  <script src="i18n.js?v=16"></script>
+  <script src="map_core.js?v=16"></script>
+  <script src="draw.js?v=16"></script>
 </body>
 </html>

@@ -59,7 +59,8 @@ window.WoRMapCore = {
     selectedCampaign: "ALL",
     disabledMapSlugs: {},
     disableReasons: {},
-    drawHistory: [], // 记录不放回抽取历史 [{ slug, name, campaign, mode, time, animMode }]
+    drawHistory: [], // 记录不放回抽取历史
+    matchMaps: [null, null], // 联队两张比赛地图 [地图1, 地图2]
     noReplacement: true // 原则上每次抽出的地图都不放回池中
   },
   currentlyInspectedMap: null,
@@ -81,6 +82,7 @@ window.WoRMapCore = {
         this.poolState.disabledMapSlugs = parsed.disabledMapSlugs || {};
         this.poolState.disableReasons = parsed.disableReasons || {};
         this.poolState.drawHistory = Array.isArray(parsed.drawHistory) ? parsed.drawHistory : [];
+        this.poolState.matchMaps = Array.isArray(parsed.matchMaps) && parsed.matchMaps.length === 2 ? parsed.matchMaps : [null, null];
         this.poolState.noReplacement = parsed.noReplacement !== undefined ? !!parsed.noReplacement : true;
       }
     } catch (e) {}
