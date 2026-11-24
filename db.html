@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>War of Rights Regiments & Win DB · 队伍数据库与胜率库</title>
+  <link rel="stylesheet" href="style.css?v=19" />
+  <style>
+    .form-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 0.8rem; color: var(--gold-accent); font-weight: 600; }
+    .win-high { color: #6fd08c; font-weight: 700; }
+    .win-mid { color: #f0b866; font-weight: 700; }
+    .win-low { color: #e06c75; font-weight: 700; }
+    .badge-usa-win { background: rgba(31,66,104,0.45); color: var(--usa-light); border: 1px solid var(--usa-border); padding: 2px 7px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+    .badge-csa-win { background: rgba(75,79,86,0.45); color: var(--csa-light); border: 1px solid var(--csa-border); padding: 2px 7px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+    .badge-draw { background: rgba(200,162,82,0.2); color: var(--gold-accent); border: 1px solid var(--gold-accent); padding: 2px 7px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+    @media (max-width: 900px) {
+      .form-grid-4, .form-grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="top-nav">
+      <div class="nav-links">
+        <a href="index.html" class="nav-link" data-i18n="navBalancer">⚔️ 队伍人数平衡 Team Balancer</a>
+        <a href="draw.html" class="nav-link" data-i18n="navDraw">🎲 地图抽取 Map Draw</a>
+        <a href="maps.html" class="nav-link" data-i18n="navMaps">🗺️ 地图池管理 Map Pool</a>
+        <a href="db.html" class="nav-link active" data-i18n="navDb">📊 队伍与胜率库 Regiments & Win DB</a>
+      </div>
+      <div class="lang-switcher">
+        <button type="button" class="lang-btn active" data-lang="zh_cn_en">简中英 CN / EN</button>
+        <button type="button" class="lang-btn" data-lang="zh_tw_en">繁中英 TW / EN</button>
+        <button type="button" class="lang-btn" data-lang="ja_en">日英 JA / EN</button>
+      </div>
+    </nav>
+
+    <header class="header">
+      <h1>WAR OF RIGHTS · 亚服队伍数据库 & 战绩胜率库</h1>
+      <p class="subtitle">独立维护亚服常驻队伍 · 手动录入每场对局时间、地图、双方队伍、胜负与伤亡 · 自动统计各队总胜率、USA/CSA 分阵营胜率及各图胜率与均伤</p>
+    </header>
+
+    <!-- 顶部数据备份工具条 -->
+    <section class="control-panel" style="padding: 12px 18px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <span class="save-indicator">● 已启用本地自动记忆（队伍库与战绩记录实时保存）</span>
+        <div class="btn-group">
+          <button id="exportDbJsonBtn" type="button" class="btn btn-outline-sm">⬇️ 导出完整库 JSON</button>
+          <button id="importDbJsonBtn" type="button" class="btn btn-outline-sm">⬆️ 导入库 JSON</button>
+          <input type="file" id="importDbJsonInput" accept=".json" class="hidden" />
+          <button id="addSampleMatchBtn" type="button" class="btn btn-outline-sm">+ 填入示例战绩</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. 手动录入一场对局战绩（时间、地图、双方队伍、胜利方、双方伤亡） -->
+    <section class="control-panel" style="border-left: 4px solid var(--gold-accent);">
+      <div class="panel-top-bar" style="margin-bottom: 12px; padding-bottom: 10px;">
+        <span class="strategy-title">1. 手动录入对局战绩与伤亡 Log Match Result</span>
+      </div>
+
+      <form id="matchLogForm">
+        <div class="form-grid-4">
+          <div class="field-group">
+            <label class="field-label" for="matchTimeInput">对局时间 Date / Time</label>
+            <input type="text" id="matchTimeInput" name="matchTimeInput" class="cell-input" placeholder="如 2026-11-24 21:00" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="matchMapSelect">战场地图 Map Name</label>
+            <input type="text" id="matchMapInput" name="matchMapInput" list="mapSuggestionsList" class="cell-input" placeholder="如 Bloody Lane / Burnside Bridge" required />
+            <datalist id="mapSuggestionsList"></datalist>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="matchWinnerSelect">胜利方 Winner</label>
+            <select id="matchWinnerSelect" name="matchWinnerSelect" class="cell-select">
+              <option value="USA">USA 联邦军胜 (Union Win)</option>
+              <option value="CSA">CSA 邦联军胜 (Confederate Win)</option>
+              <option value="DRAW">平局 Draw</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" style="opacity:0;">提交</label>
+            <button type="submit" class="btn btn-primary" style="width:100%;">➕ 记录本场战绩 Add Match</button>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label class="field-label" for="usaTeamsInput">USA 联邦军参战队伍（可点下方快捷团名添加）</label>
+            <input type="text" id="usaTeamsInput" name="usaTeamsInput" class="cell-input" placeholder="如 [18thVA], [FEX], [36thOH]" required />
+            <div id="quickAddUsaChips" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="csaTeamsInput">CSA 邦联军参战队伍（可点下方快捷团名添加）</label>
+            <input type="text" id="csaTeamsInput" name="csaTeamsInput" class="cell-input" placeholder="如 [1stNC], [BEF], [10thSC]" required />
+            <div id="quickAddCsaChips" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;"></div>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label class="field-label" for="usaCasInput">USA 伤亡数字 Casualties</label>
+            <input type="number" id="usaCasInput" name="usaCasInput" class="cell-input" min="0" value="0" required />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="csaCasInput">CSA 伤亡数字 Casualties</label>
+            <input type="number" id="csaCasInput" name="csaCasInput" class="cell-input" min="0" value="0" required />
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- 2. 队伍数据库与胜率总览（总胜率、USA胜率、CSA胜率、场次明细与均伤） -->
+    <section class="control-panel">
+      <div class="panel-top-bar" style="margin-bottom: 12px; padding-bottom: 10px;">
+        <span class="strategy-title">2. 队伍数据库与胜率统计 Regiment Database & Win Rates</span>
+        <div class="btn-group">
+          <button id="addRegimentBtn" type="button" class="btn btn-secondary" style="padding:5px 12px; font-size:0.82rem;">+ 新增队伍 Add Regiment</button>
+          <button id="resetRegimentsBtn" type="button" class="btn btn-outline-sm">重置默认亚服9团</button>
+        </div>
+      </div>
+
+      <div class="input-table-wrapper" style="max-height: 420px;">
+        <table class="entry-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">队伍番号 Tag</th>
+              <th style="width: 12%;">默认人数 Min-Max</th>
+              <th style="width: 15%;">总胜率 Total Win%</th>
+              <th style="width: 20%;">USA 北军胜率 (胜/场)</th>
+              <th style="width: 20%;">CSA 南军胜率 (胜/场)</th>
+              <th style="width: 10%;">场均伤亡</th>
+              <th style="width: 8%; text-align: center;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="regimentStatsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. 各地图胜率与平均伤亡统计 -->
+    <section class="control-panel">
+      <div class="panel-top-bar" style="margin-bottom: 12px; padding-bottom: 10px;">
+        <span class="strategy-title">3. 各地图胜率与平均伤亡 Map Win Rates & Average Casualties</span>
+      </div>
+
+      <div class="input-table-wrapper" style="max-height: 360px;">
+        <table class="entry-table">
+          <thead>
+            <tr>
+              <th style="width: 24%;">地图名称 Map</th>
+              <th style="width: 10%;">对局场次</th>
+              <th style="width: 18%;">USA 胜率 (胜/场)</th>
+              <th style="width: 18%;">CSA 胜率 (胜/场)</th>
+              <th style="width: 15%;">USA 平均伤亡</th>
+              <th style="width: 15%;">CSA 平均伤亡</th>
+            </tr>
+          </thead>
+          <tbody id="mapStatsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. 已录入对局流水明细 -->
+    <section class="control-panel">
+      <div class="panel-top-bar" style="margin-bottom: 12px; padding-bottom: 10px;">
+        <span class="strategy-title">4. 历史对局流水明细 Match Log History</span>
+      </div>
+
+      <div class="input-table-wrapper" style="max-height: 340px;">
+        <table class="entry-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">时间 Time</th>
+              <th style="width: 17%;">地图 Map</th>
+              <th style="width: 20%;">USA 阵营</th>
+              <th style="width: 20%;">CSA 阵营</th>
+              <th style="width: 10%;">胜利方</th>
+              <th style="width: 10%;">伤亡 (U/C)</th>
+              <th style="width: 8%; text-align: center;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="matchHistoryTbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="i18n.js?v=19"></script>
+  <script src="db.js?v=19"></script>
+</body>
+</html>
