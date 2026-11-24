@@ -37,13 +37,13 @@ const activeModeTag = document.getElementById("activeModeTag");
 
 // 职责位置选项 (Top A, Top B, Bottom A, Bottom B, CAV, SS)
 const ROLE_OPTIONS = [
-  { value: "", label: "-- 未指定 --", short: "" },
-  { value: "Top A", label: "Top A (上路A)", short: "Top A" },
-  { value: "Top B", label: "Top B (上路B)", short: "Top B" },
-  { value: "Bottom A", label: "Bottom A (下路A)", short: "Bottom A" },
-  { value: "Bottom B", label: "Bottom B (下路B)", short: "Bottom B" },
-  { value: "CAV", label: "CAV (骑兵)", short: "CAV" },
-  { value: "SS", label: "SS (神射手)", short: "SS" }
+  { value: "", label: "-- Company --", short: "" },
+  { value: "Top A", label: "Top A", short: "Top A" },
+  { value: "Top B", label: "Top B", short: "Top B" },
+  { value: "Bottom A", label: "Bottom A", short: "Bottom A" },
+  { value: "Bottom B", label: "Bottom B", short: "Bottom B" },
+  { value: "CAV", label: "CAV", short: "CAV" },
+  { value: "SS", label: "SS", short: "SS" }
 ];
 
 function getSavedMatchMaps() {

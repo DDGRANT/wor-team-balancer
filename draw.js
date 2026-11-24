@@ -220,8 +220,40 @@ function hideAllStages() {
   document.getElementById("canvasStage").classList.add("hidden");
 }
 
+let drawPhase = "map"; // "region" | "map"
+let pendingMapWinner = null;
+
+function setPhaseBanner(text) {
+  const b = document.getElementById("stagePhaseBanner");
+  if (!b) return;
+  if (!text) {
+    b.classList.add("hidden");
+  } else {
+    b.textContent = text;
+    b.classList.remove("hidden");
+  }
+}
+
+function launchAnimationForPool(poolItems, targetItem) {
+  hideAllStages();
+  if (selectedAnim === "simple") {
+    runSimpleAnimation(poolItems, targetItem);
+  } else if (selectedAnim === "scratch") {
+    runScratchCardAnimation(targetItem);
+  } else if (selectedAnim === "wheel") {
+    runWheelAnimation(poolItems, targetItem);
+  } else if (selectedAnim === "pachinko") {
+    runPachinkoAnimation(poolItems, targetItem);
+  } else if (selectedAnim === "lottery") {
+    runLotteryAnimation(poolItems, targetItem);
+  } else if (selectedAnim === "horserace") {
+    runHorseRaceAnimation(poolItems, targetItem);
+  }
+}
+
 function startDrawSequence() {
   if (isAnimating) return;
+  const core = window.WoRMapCore;
   const pool = getCandidatePool();
   if (pool.length === 0) {
     alert("当前筛选条件下可用地图池为空！请切换模式/战役，或前往“地图池管理”页面重新启用地图。");
@@ -233,27 +265,69 @@ function startDrawSequence() {
   document.getElementById("drawResultBox").classList.add("hidden");
   document.getElementById("stagePanel").classList.add("active-glow");
 
-  // 预先决定本次随机抽中的目标地图（确保绝对公平等概率）
-  const winner = pool[Math.floor(Math.random() * pool.length)];
-  currentDrawnMap = winner;
+  // 统计当前可用池包含哪些战役区域
+  const campMap = {};
+  pool.forEach((m) => {
+    const cKey = m.campaign;
+    if (!campMap[cKey]) {
+      campMap[cKey] = {
+        slug: `region_${cKey}`,
+        campaignKey: cKey,
+        name: m.campaign_name || m.campaign,
+        campaign_name: "地图区域 Campaign Region",
+        mode_name: m.mode_name || m.mode,
+        usa_tickets: null,
+        unit_slots: 0,
+        ground_width_meters: 0,
+        maps: []
+      };
+    }
+    campMap[cKey].maps.push(m);
+  });
 
-  if (selectedAnim === "simple") {
-    runSimpleAnimation(pool, winner);
-  } else if (selectedAnim === "scratch") {
-    runScratchCardAnimation(winner);
-  } else if (selectedAnim === "wheel") {
-    runWheelAnimation(pool, winner);
-  } else if (selectedAnim === "pachinko") {
-    runPachinkoAnimation(pool, winner);
-  } else if (selectedAnim === "lottery") {
-    runLotteryAnimation(pool, winner);
-  } else if (selectedAnim === "horserace") {
-    runHorseRaceAnimation(pool, winner);
+  const regions = Object.values(campMap);
+  regions.forEach((r) => {
+    r.unit_slots = r.maps.length;
+  });
+
+  // 如果用户选的是“全部战役 ALL”且池中有多个区域，则分两步：第一阶段先抽地图区域，第二阶段再抽该区域内的具体地图！
+  if (core.poolState.selectedCampaign === "ALL" && regions.length > 1) {
+    const chosenRegion = regions[Math.floor(Math.random() * regions.length)];
+    const regionPool = chosenRegion.maps;
+    pendingMapWinner = regionPool[Math.floor(Math.random() * regionPool.length)];
+    currentDrawnMap = pendingMapWinner;
+    drawPhase = "region";
+    setPhaseBanner("【第一阶段 Phase 1 / 2】正在抽取地图区域 (Campaign Region)...");
+    launchAnimationForPool(regions, chosenRegion);
+  } else {
+    // 仅剩单个区域或已指定战役时，直接抽取具体地图
+    const winner = pool[Math.floor(Math.random() * pool.length)];
+    pendingMapWinner = winner;
+    currentDrawnMap = winner;
+    drawPhase = "map";
+    setPhaseBanner(`【抽取地图 Map Draw】区域 Region: ${winner.campaign_name || winner.campaign}`);
+    launchAnimationForPool(pool, winner);
   }
 }
 
 function finalizeDrawnMap(winner) {
+  if (drawPhase === "region" && pendingMapWinner) {
+    isAnimating = false;
+    const regionName = winner.name;
+    const core = window.WoRMapCore;
+    const regionSubPool = getCandidatePool().filter((m) => m.campaign === winner.campaignKey);
+    setPhaseBanner(`✅ 已抽中区域：【${regionName}】！即将抽取该区域内的具体地图 (Phase 2 / 2)...`);
+
+    setTimeout(() => {
+      drawPhase = "map";
+      setPhaseBanner(`【第二阶段 Phase 2 / 2】正在从【${regionName}】中抽取具体地图...`);
+      launchAnimationForPool(regionSubPool, pendingMapWinner);
+    }, 1500);
+    return;
+  }
+
   isAnimating = false;
+  setPhaseBanner("");
   const core = window.WoRMapCore;
 
   // 原则上每次抽出的地图都不放回池中
@@ -345,9 +419,11 @@ function runScratchCardAnimation(winner) {
 
   document.getElementById("scratchCampText").textContent = `${winner.campaign_name || winner.campaign} · ${winner.mode_name || winner.mode}`;
   document.getElementById("scratchMapText").textContent = winner.name;
-  const tInfo = winner.usa_tickets !== null
-    ? `USA ${winner.usa_tickets} vs CSA ${winner.csa_tickets} | Final Push: ${winner.final_push}`
-    : `Units: ${winner.unit_slots || "-"} 槽 | 宽度: ${Math.round(winner.ground_width_meters || 0)}m`;
+  const tInfo = drawPhase === "region"
+    ? `该区域可用地图数: ${winner.unit_slots} 张 (刮开后进入第二阶段抽具体地图)`
+    : (winner.usa_tickets !== null
+      ? `USA ${winner.usa_tickets} vs CSA ${winner.csa_tickets} | Final Push: ${winner.final_push}`
+      : `Units: ${winner.unit_slots || "-"} 槽 | 宽度: ${Math.round(winner.ground_width_meters || 0)}m`);
   document.getElementById("scratchStatsText").textContent = tInfo;
 
   const canvas = document.getElementById("scratchCanvas");
