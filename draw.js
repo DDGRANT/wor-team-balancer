@@ -345,7 +345,7 @@ function runScratchCardAnimation(winner) {
         if (imgData[i] === 0) cleared++;
       }
       const ratio = cleared / (imgData.length / 16);
-      if (ratio > 0.45 && !scratchRevealed) {
+      if (ratio > 0.80 && !scratchRevealed) {
         scratchRevealed = true;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         finalizeDrawnMap(winner);
@@ -396,10 +396,10 @@ function runWheelAnimation(pool, winner) {
 
   // 指针在正上方 (-Math.PI / 2)，计算让 winnerIdx 正好停在指针下的目标角度
   const targetCenterAngle = winnerIdx * arc + arc / 2;
-  const extraSpins = 6 * Math.PI * 2;
+  const extraSpins = 8 * Math.PI * 2;
   const finalRotation = extraSpins + (-Math.PI / 2 - targetCenterAngle);
 
-  const duration = 4200;
+  const duration = 7500;
   const startTime = performance.now();
   const colors = ["#1f4268", "#4b4f56", "#2b547e", "#3c4149", "#244c75", "#565b64"];
 
@@ -555,17 +555,17 @@ function runPachinkoAnimation(pool, winner) {
       if (dist < ball.r + 4) {
         const angle = Math.atan2(dy, dx);
         ball.vx = Math.cos(angle) * 3.2 + (targetX - ball.x) * 0.012;
-        ball.vy = Math.abs(Math.sin(angle)) * 2.2 + 1.2;
+        ball.vy = Math.abs(Math.sin(angle)) * 1.3 + 0.65;
         ball.x = p.x + Math.cos(angle) * (ball.r + 5);
         ball.y = p.y + Math.sin(angle) * (ball.r + 5);
       }
     });
 
     // 重力与温和向目标槽引导（保证最后自然落入事先随机选定的 winner 槽）
-    ball.vy += 0.16;
+    ball.vy += 0.085;
     const progressY = Math.max(0, Math.min(1, ball.y / slotTop));
     ball.vx += (targetX - ball.x) * (0.0018 + progressY * 0.004);
-    ball.vx *= 0.96;
+    ball.vx *= 0.94;
     ball.x += ball.vx;
     ball.y += ball.vy;
 
@@ -623,8 +623,8 @@ function runLotteryAnimation(pool, winner) {
   }));
 
   const startTime = performance.now();
-  const mixDuration = 2800;
-  const ejectDuration = 1200;
+  const mixDuration = 5200;
+  const ejectDuration = 2200;
 
   statusEl.textContent = "🎱 六合彩搅珠机高速搅拌中...";
 
@@ -736,7 +736,7 @@ function runHorseRaceAnimation(pool, winner) {
     map: m,
     x: startX,
     isWinner: m.slug === winner.slug,
-    baseSpeed: 2.4 + Math.random() * 0.8
+    baseSpeed: 1.15 + Math.random() * 0.45
   }));
 
   statusEl.textContent = "🏇 骑兵赛马冲刺中...";
@@ -775,11 +775,11 @@ function runHorseRaceAnimation(pool, winner) {
       const y = 30 + i * laneH + laneH / 2;
       const progress = (h.x - startX) / (finishX - startX);
       // 冲刺阶段让 winner 稳步超越冲线
-      let boost = (Math.random() - 0.35) * 2.2;
-      if (progress > 0.65) {
-        boost += h.isWinner ? 1.35 : -0.45;
+      let boost = (Math.random() - 0.35) * 1.2;
+      if (progress > 0.68) {
+        boost += h.isWinner ? 0.75 : -0.25;
       }
-      h.x += Math.max(0.8, h.baseSpeed + boost);
+      h.x += Math.max(0.45, h.baseSpeed + boost);
 
       if (h.isWinner && h.x >= finishX) {
         winnerCrossed = true;
