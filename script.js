@@ -205,7 +205,7 @@ function renderAsiaDbChips() {
     return `
       <div style="display:inline-flex; align-items:center; gap:6px; background:${bgCol}; border:1px solid ${borderCol}; border-radius:6px; padding:4px 10px; font-size:0.84rem;">
         <button type="button" onclick="toggleAsiaRegimentInTable(${idx})" style="background:transparent; border:none; color:${isAdded ? "#81c995" : "#e6e8ec"}; font-weight:700; cursor:pointer;">
-          ${isAdded ? "✔ " : "+ "}${escapeHtml(reg.tag)} <span style="font-weight:400; color:#9aa3b2; font-size:0.78rem;">(${reg.defaultMin}-${reg.defaultMax})</span>
+          ${isAdded ? "✔ " : "+ "}${escapeHtml(reg.tag)}
         </button>
         <button type="button" onclick="removeAsiaRegFromDb(${idx})" title="从数据库中移除" style="background:transparent; border:none; color:#8f99ab; cursor:pointer; font-size:0.76rem; padding-left:2px;">✕</button>
       </div>
@@ -279,11 +279,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const rawTag = prompt("请输入新兵团番号（如 [2ndTX] 或 (NEW)）：");
     if (!rawTag || !rawTag.trim()) return;
     const tag = rawTag.trim();
-    const minStr = prompt(`请输入 ${{tag}} 的默认最低人数：`, "12");
-    const maxStr = prompt(`请输入 ${{tag}} 的默认最高人数：`, "16");
-    const dMin = Math.max(0, parseInt(minStr, 10) || 10);
-    const dMax = Math.max(dMin, parseInt(maxStr, 10) || dMin);
-    asiaRegimentDb.push({ tag, defaultMin: dMin, defaultMax: dMax, defaultLock: "" });
+    asiaRegimentDb.push({ tag, defaultMin: 0, defaultMax: 0, defaultLock: "" });
     saveAsiaDb();
     renderAsiaDbChips();
   });
