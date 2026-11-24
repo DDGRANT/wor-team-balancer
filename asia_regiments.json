@@ -1,0 +1,65 @@
+[
+  {
+    "tag": "[1stNC]",
+    "defaultMin": 12,
+    "defaultMax": 16,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[BEF]",
+    "defaultMin": 15,
+    "defaultMax": 20,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[FEX]",
+    "defaultMin": 15,
+    "defaultMax": 20,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[NYV]",
+    "defaultMin": 12,
+    "defaultMax": 16,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "(NOV)",
+    "defaultMin": 10,
+    "defaultMax": 15,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[18thVA]",
+    "defaultMin": 15,
+    "defaultMax": 20,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[36thOH]",
+    "defaultMin": 12,
+    "defaultMax": 16,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[10thSC]",
+    "defaultMin": 10,
+    "defaultMax": 15,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[79thNY]",
+    "defaultMin": 12,
+    "defaultMax": 16,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  }
+]

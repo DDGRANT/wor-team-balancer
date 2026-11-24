@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>War of Rights Team Balancer · 联队人数平衡器</title>
-  <link rel="stylesheet" href="style.css?v=17" />
+  <link rel="stylesheet" href="style.css?v=18" />
 </head>
 <body>
   <div class="container">
@@ -42,6 +42,20 @@
           <button id="importJsonBtn" class="btn btn-outline-sm" type="button" data-i18n="btnImportJson">⬆️ 导入 Import JSON</button>
           <input type="file" id="importJsonInput" accept=".json" class="hidden" />
         </div>
+      </div>
+
+
+      <!-- 亚服常驻兵团数据库快捷栏 -->
+      <div style="background:#151921; border:1px solid #2e3746; border-radius:6px; padding:12px 14px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+          <span style="font-weight:700; color:var(--gold-accent); font-size:0.9rem;">🌏 亚服常驻兵团库 Asia Regiments DB（点击加入报名表，支持新增保存自定义新团）</span>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="loadAllAsiaBtn" type="button" class="btn btn-primary" style="padding:4px 12px; font-size:0.8rem;">⚡ 一键填入全部亚服常驻团 Load All Asia Teams</button>
+            <button id="addRegToDbBtn" type="button" class="btn btn-outline-sm">+ 收录新团进数据库 Add to DB</button>
+            <button id="resetAsiaDbBtn" type="button" class="btn btn-outline-sm" title="恢复默认9支亚服队伍">重置默认库</button>
+          </div>
+        </div>
+        <div id="asiaDbChips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
       </div>
 
       <!-- 模式 A：表格输入区域 -->
@@ -308,7 +322,7 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=17"></script>
-  <script src="script.js?v=17"></script>
+  <script src="i18n.js?v=18"></script>
+  <script src="script.js?v=18"></script>
 </body>
 </html>

@@ -86,7 +86,214 @@ window.updateTeamRole = function (faction, teamId, roleVal) {
   }
 };
 
-window.addEventListener("DOMContentLoaded", () => {
+
+const STORAGE_KEY_ASIA_DB = "wor_asia_regiments_db_v1";
+
+const DEFAULT_ASIA_REGIMENTS = [
+  {
+    "tag": "[1stNC]",
+    "defaultMin": 12,
+    "defaultMax": 16,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[BEF]",
+    "defaultMin": 15,
+    "defaultMax": 20,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[FEX]",
+    "defaultMin": 15,
+    "defaultMax": 20,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[NYV]",
+    "defaultMin": 12,
+    "defaultMax": 16,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "(NOV)",
+    "defaultMin": 10,
+    "defaultMax": 15,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[18thVA]",
+    "defaultMin": 15,
+    "defaultMax": 20,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[36thOH]",
+    "defaultMin": 12,
+    "defaultMax": 16,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[10thSC]",
+    "defaultMin": 10,
+    "defaultMax": 15,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  },
+  {
+    "tag": "[79thNY]",
+    "defaultMin": 12,
+    "defaultMax": 16,
+    "defaultLock": "",
+    "note": "亚服常驻团"
+  }
+];
+
+let asiaRegimentDb = [];
+
+async function initAsiaRegimentDb() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_ASIA_DB);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        asiaRegimentDb = parsed;
+        renderAsiaDbChips();
+        return;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const resp = await fetch("asia_regiments.json?t=" + Date.now());
+    if (resp.ok) {
+      const ext = await resp.json();
+      if (Array.isArray(ext) && ext.length > 0) {
+        asiaRegimentDb = ext;
+        saveAsiaDb();
+        renderAsiaDbChips();
+        return;
+      }
+    }
+  } catch (e) {}
+
+  asiaRegimentDb = JSON.parse(JSON.stringify(DEFAULT_ASIA_REGIMENTS));
+  saveAsiaDb();
+  renderAsiaDbChips();
+}
+
+function saveAsiaDb() {
+  localStorage.setItem(STORAGE_KEY_ASIA_DB, JSON.stringify(asiaRegimentDb));
+}
+
+function renderAsiaDbChips() {
+  const container = document.getElementById("asiaDbChips");
+  if (!container) return;
+
+  const activeNames = new Set(entryRows.map((r) => normalizeTag(r.name)));
+
+  container.innerHTML = asiaRegimentDb.map((reg, idx) => {
+    const isAdded = activeNames.has(normalizeTag(reg.tag));
+    const borderCol = isAdded ? "#6fd08c" : "#3b4454";
+    const bgCol = isAdded ? "rgba(111, 208, 140, 0.14)" : "#1b2029";
+    return `
+      <div style="display:inline-flex; align-items:center; gap:6px; background:${bgCol}; border:1px solid ${borderCol}; border-radius:6px; padding:4px 10px; font-size:0.84rem;">
+        <button type="button" onclick="toggleAsiaRegimentInTable(${idx})" style="background:transparent; border:none; color:${isAdded ? "#81c995" : "#e6e8ec"}; font-weight:700; cursor:pointer;">
+          ${isAdded ? "✔ " : "+ "}${escapeHtml(reg.tag)} <span style="font-weight:400; color:#9aa3b2; font-size:0.78rem;">(${reg.defaultMin}-${reg.defaultMax})</span>
+        </button>
+        <button type="button" onclick="removeAsiaRegFromDb(${idx})" title="从数据库中移除" style="background:transparent; border:none; color:#8f99ab; cursor:pointer; font-size:0.76rem; padding-left:2px;">✕</button>
+      </div>
+    `;
+  }).join("");
+}
+
+window.toggleAsiaRegimentInTable = function (idx) {
+  const reg = asiaRegimentDb[idx];
+  if (!reg) return;
+  const norm = normalizeTag(reg.tag);
+  const existingIdx = entryRows.findIndex((r) => normalizeTag(r.name) === norm);
+
+  if (existingIdx !== -1) {
+    // 若已在报名表中则移除
+    entryRows.splice(existingIdx, 1);
+    if (entryRows.length === 0) entryRows.push(createEmptyRow());
+  } else {
+    // 清理空占位行后加入
+    entryRows = entryRows.filter((r) => r.name.trim() !== "");
+    entryRows.push({
+      id: genId(),
+      name: reg.tag,
+      min: reg.defaultMin,
+      max: reg.defaultMax,
+      lockedFaction: reg.defaultLock || null
+    });
+  }
+  renderEntryTable();
+  renderAsiaDbChips();
+  // 若该队伍在亚服常驻库中，顺便记忆其最新人数区间作为下次默认值
+  const dbMatch = asiaRegimentDb.find((d) => normalizeTag(d.tag) === normalizeTag(row.name));
+  if (dbMatch && (field === "min" || field === "max")) {
+    dbMatch.defaultMin = row.min;
+    dbMatch.defaultMax = row.max;
+    saveAsiaDb();
+  }
+  renderAsiaDbChips();
+  saveToAutoSave();
+};
+
+window.removeAsiaRegFromDb = function (idx) {
+  const reg = asiaRegimentDb[idx];
+  if (!reg) return;
+  if (!confirm(`确定要从常驻数据库中删除 "${reg.tag}" 吗？`)) return;
+  asiaRegimentDb.splice(idx, 1);
+  saveAsiaDb();
+  renderAsiaDbChips();
+};
+
+function loadAllAsiaRegiments() {
+  entryRows = asiaRegimentDb.map((reg) => ({
+    id: genId(),
+    name: reg.tag,
+    min: reg.defaultMin,
+    max: reg.defaultMax,
+    lockedFaction: reg.defaultLock || null
+  }));
+  renderEntryTable();
+  renderAsiaDbChips();
+  syncTableToText();
+  saveToAutoSave();
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  await initAsiaRegimentDb();
+  const loadAllBtn = document.getElementById("loadAllAsiaBtn");
+  if (loadAllBtn) loadAllBtn.addEventListener("click", loadAllAsiaRegiments);
+  const addDbBtn = document.getElementById("addRegToDbBtn");
+  if (addDbBtn) addDbBtn.addEventListener("click", () => {
+    const rawTag = prompt("请输入新兵团番号（如 [2ndTX] 或 (NEW)）：");
+    if (!rawTag || !rawTag.trim()) return;
+    const tag = rawTag.trim();
+    const minStr = prompt(`请输入 ${{tag}} 的默认最低人数：`, "12");
+    const maxStr = prompt(`请输入 ${{tag}} 的默认最高人数：`, "16");
+    const dMin = Math.max(0, parseInt(minStr, 10) || 10);
+    const dMax = Math.max(dMin, parseInt(maxStr, 10) || dMin);
+    asiaRegimentDb.push({ tag, defaultMin: dMin, defaultMax: dMax, defaultLock: "" });
+    saveAsiaDb();
+    renderAsiaDbChips();
+  });
+  const resetDbBtn = document.getElementById("resetAsiaDbBtn");
+  if (resetDbBtn) resetDbBtn.addEventListener("click", () => {
+    if (!confirm("确定重置为默认 9 支亚服常驻队伍吗？")) return;
+    asiaRegimentDb = JSON.parse(JSON.stringify(DEFAULT_ASIA_REGIMENTS));
+    saveAsiaDb();
+    renderAsiaDbChips();
+  });
   renderSyncedMatchMaps();
   const syncBtn = document.getElementById("syncMapsBtn");
   if (syncBtn) syncBtn.addEventListener("click", renderSyncedMatchMaps);
@@ -501,6 +708,14 @@ window.updateAuditRow = function (id, field, value) {
   }
 
   renderEntryTable();
+  // 若该队伍在亚服常驻库中，顺便记忆其最新人数区间作为下次默认值
+  const dbMatch = asiaRegimentDb.find((d) => normalizeTag(d.tag) === normalizeTag(row.name));
+  if (dbMatch && (field === "min" || field === "max")) {
+    dbMatch.defaultMin = row.min;
+    dbMatch.defaultMax = row.max;
+    saveAsiaDb();
+  }
+  renderAsiaDbChips();
   saveToAutoSave();
 };
 
@@ -508,6 +723,14 @@ window.deleteAuditRow = function (id) {
   auditRules = auditRules.filter((r) => r.id !== id);
   renderAuditTable();
   renderEntryTable();
+  // 若该队伍在亚服常驻库中，顺便记忆其最新人数区间作为下次默认值
+  const dbMatch = asiaRegimentDb.find((d) => normalizeTag(d.tag) === normalizeTag(row.name));
+  if (dbMatch && (field === "min" || field === "max")) {
+    dbMatch.defaultMin = row.min;
+    dbMatch.defaultMax = row.max;
+    saveAsiaDb();
+  }
+  renderAsiaDbChips();
   saveToAutoSave();
 };
 
@@ -596,6 +819,14 @@ window.updateEntryRow = function (id, field, value) {
     previewEl.className = `adj-preview ${isModified ? "modified" : ""}`;
   }
 
+  // 若该队伍在亚服常驻库中，顺便记忆其最新人数区间作为下次默认值
+  const dbMatch = asiaRegimentDb.find((d) => normalizeTag(d.tag) === normalizeTag(row.name));
+  if (dbMatch && (field === "min" || field === "max")) {
+    dbMatch.defaultMin = row.min;
+    dbMatch.defaultMax = row.max;
+    saveAsiaDb();
+  }
+  renderAsiaDbChips();
   saveToAutoSave();
 };
 
@@ -605,6 +836,14 @@ window.deleteEntryRow = function (id) {
     entryRows.push(createEmptyRow());
   }
   renderEntryTable();
+  // 若该队伍在亚服常驻库中，顺便记忆其最新人数区间作为下次默认值
+  const dbMatch = asiaRegimentDb.find((d) => normalizeTag(d.tag) === normalizeTag(row.name));
+  if (dbMatch && (field === "min" || field === "max")) {
+    dbMatch.defaultMin = row.min;
+    dbMatch.defaultMax = row.max;
+    saveAsiaDb();
+  }
+  renderAsiaDbChips();
   saveToAutoSave();
 };
 
@@ -916,6 +1155,14 @@ window.swapTeamFaction = function (teamId, fromFaction) {
   const [movedTeam] = sourceList.splice(idx, 1);
   currentState[toFaction].push(movedTeam);
   renderResultTables();
+  // 若该队伍在亚服常驻库中，顺便记忆其最新人数区间作为下次默认值
+  const dbMatch = asiaRegimentDb.find((d) => normalizeTag(d.tag) === normalizeTag(row.name));
+  if (dbMatch && (field === "min" || field === "max")) {
+    dbMatch.defaultMin = row.min;
+    dbMatch.defaultMax = row.max;
+    saveAsiaDb();
+  }
+  renderAsiaDbChips();
   saveToAutoSave();
 };
 
@@ -1080,7 +1327,13 @@ function saveToAutoSave() {
 function loadFromAutoSave() {
   const raw = localStorage.getItem(STORAGE_KEY_AUTO);
   if (!raw) {
-    entryRows = [createEmptyRow()];
+    entryRows = asiaRegimentDb.map((reg) => ({
+      id: genId(),
+      name: reg.tag,
+      min: reg.defaultMin,
+      max: reg.defaultMax,
+      lockedFaction: reg.defaultLock || null
+    }));
     setStrategyMode("pure", false);
     renderAuditTable();
     renderEntryTable();
